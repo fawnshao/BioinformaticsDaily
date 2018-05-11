@@ -10,7 +10,7 @@ minx <- as.numeric(args[4])
 maxx <- as.numeric(args[5])
 
 inputdata <- fread(inputfile, sep = "\t")
-plotdata <- inputdata[, c(coltogroup, coltoplot)]
+plotdata <- inputdata[, .SD, .SDcols = c(coltogroup, coltoplot)]
 colnames(plotdata) <- c("mygroup", "myvalues")
 p0 <- ggplot(plotdata, aes(x = mygroup, y = myvalues, fill = factor(mygroup))) + 
     geom_violin() + ylim(c(minx, maxx)) +
