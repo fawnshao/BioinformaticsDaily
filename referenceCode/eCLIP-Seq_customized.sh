@@ -9,8 +9,8 @@
 
 # rclone sync bigwigs/ mygoogle:CLIP/eCLIP_ENCODE_testpipeline/bigwigs
 ### input experiment name
-rbp=K562
-cell=RBFOX2
+rbp=RBFOX2
+cell=K562
 pre=K562.RBFOX2
 inputfile=$pre.input
 IPA=$pre.IPA
