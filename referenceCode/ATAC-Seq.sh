@@ -1,5 +1,8 @@
 #!/bin/bash
 # this code will generate .sorted.bam files first, and then generate Homer tag directory and UCSC file as track hubs
+####
+# rclone sync /scratch/04935/shaojf/NUP_related_others/ATAC-seq/ mygoogle:NUP_project/NUP_related_others/ATAC-seq/
+####
 workdir=/home1/04935/shaojf/scratch/NUP_related_others/ATAC-seq
 fastq_dir=$workdir/fastqs
 fastqc_dir=$workdir/fastqc_res
@@ -10,6 +13,9 @@ trimadapterdir=$workdir/fastqs_trimmed
 
 HG19=/home1/04935/shaojf/scratch/bowtie2-index/hg19
 visdir=/home1/04935/shaojf/stampede2/UCSCvis
+
+mkdir $fastqc_dir
+mkdir $trimadapterdir
 
 fastqc --threads 68 --outdir $fastqc_dir $fastq_dir/*.fastq &
 echo    ***____running fastqc in background____***
@@ -41,11 +47,20 @@ do
 	-a tag2rev=CTGTCTCTTATACACATCTCCGAGCCCACGAGAC \
 	-a index2=TCGTCGGCAGCGTC \
 	-a index2rev=GACGCTGCCGACGA\
+	--info-file=$i.cutadapt.metrics \
 	-o $trimadapterdir/$i.clean.fastq $f &
 	echo    ***____step0: running cutadapt successful____***
 done
 wait
+# grep -e "=== Adapter" -e "Trimmed" ATAC.out > cutadapt.stats
 
+###### esATAC
+# source("http://www.bioconductor.org/biocLite.R")
+# biocLite("esATAC")
+# biocLite("BSgenome.Hsapiens.UCSC.hg19")
+
+
+###### my pipeline
 for f in $fastq_dir/*.fastq
 do
 	echo $f
@@ -64,12 +79,29 @@ do
 
 	findPeaks $i.mTD -style factor -o auto &
 	echo    ***____step4: findPeaks for $i.mTD folder completed____***
-	echo    ++++++++++++++++++++++++ Yahoo - samples all finished  +++++++++++++++++++++++++++++++++++
 
 	# samtools rmdup $i.sorted.bam $i.sorted.rmdup.bam
 	picard MarkDuplicates I=$i.sorted.bam O=marked_duplicates.$i.sorted.bam M=$i.marked_dup_metrics.txt
 	macs2 callpeak --verbose 3 -t marked_duplicates.$i.sorted.bam -f BAM -g hs -n $i --call-summits --keep-dup all &
+	
+	echo    ++++++++++++++++++++++++ Yahoo - samples all finished  +++++++++++++++++++++++++++++++++++
 done
 
 makeMultiWigHub.pl NUP_ATAC hg19 -url $visdir -webdir $visdir -d *.mTD
 wait
+
+echo "Experiment Length" | tr " " "\t" > NUP_ATAC.peak.length.tsv
+for peaks in *peaks.narrowPeak
+do
+	expname=`echo $peaks | sed 's/_peaks.narrowPeak//'`
+	cut -f 1-3 $peaks | uniq | awk -vvar=$expname -vOFS="\t" '{print var,$3-$2+1}'  >> NUP_ATAC.peak.length.tsv
+done
+Rscript /home1/04935/shaojf/myTools/BioinformaticsDaily/RVisualization/
+
+for peaks in *peaks.narrowPeak
+do
+	expname=`echo $peaks | sed 's/_peaks.narrowPeak//'`
+	findMotifsGenome.pl <(awk -vOFS="\t" '{print $1,$2,$3,$4,"1000","+"}' $peaks | uniq) hg19 $expname.homer.motifs -size given -p 68 -mknown /home1/04935/shaojf/myTools/HOMER/data/knownTFs/vertebrates/known.motifs > $expname.findMotifsGenome.txt &
+	annotatePeaks.pl <(awk -vOFS="\t" '{print $1,$2,$3,$4,"1000","+"}' $peaks | uniq) hg19 -m /home1/04935/shaojf/myTools/HOMER/data/knownTFs/vertebrates/known.motifs -size given -p 68 > $expname.motifs.txt &
+done
+
