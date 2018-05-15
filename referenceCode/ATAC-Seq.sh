@@ -4,9 +4,9 @@ workdir=/home1/04935/shaojf/scratch/NUP_related_others/ATAC-seq
 fastq_dir=$workdir/fastqs
 fastqc_dir=$workdir/fastqc_res
 trimadapterdir=$workdir/fastqs_trimmed
-mappingtogenome=$workdir/reads2genome
-bw_dir=$workdir/bigwigs
-dhspeaks=$workdir/dhspeaks
+# mappingtogenome=$workdir/reads2genome
+# bw_dir=$workdir/bigwigs
+# dhspeaks=$workdir/dhspeaks
 
 HG19=/home1/04935/shaojf/scratch/bowtie2-index/hg19
 visdir=/home1/04935/shaojf/stampede2/UCSCvis
@@ -51,22 +51,25 @@ do
 	echo $f
 	i=`echo $f | awk -F"/" '{print $NF}' | sed 's/.fastq//'`
 
-	bowtie2 --local --very-sensitive -p 68 -x $HG19 -U $trimadapterdir/$i.clean.fastq | samtools view -1 -q 10 --threads 68 | samtools sort --threads 68 > $i.sorted.bam
+	bowtie2 --local --very-sensitive -p 68 -x $HG19 -U $trimadapterdir/$i.clean.fastq | \
+	samtools view -1 -q 10 --threads 68 | samtools sort --threads 68 > $i.sorted.bam
 	echo    ***____step1: bowtie2 successful____***
 
-	nice makeTagDirectory $i.mTD -genome hg19 -checkGC -tbp 1 $i.sorted.bam
+	makeTagDirectory $i.mTD -genome hg19 -checkGC -tbp 1 $i.sorted.bam
 	echo    ***____step2: home makeTagDirectory successful____***
 	echo    ***--- these samples were normed to 10million total reads____***
 
-	nice makeBigWig.pl $i.mTD/ hg19 -url $visdir -webdir $visdir
+	makeBigWig.pl $i.mTD/ hg19 -url $visdir -webdir $visdir &
 	echo    ***____step3: minus trand UCSC bedgraph.gz file of $i.mTD folder completed____***
 
-	nice findPeaks $i.mTD -style factor -o auto
+	findPeaks $i.mTD -style factor -o auto &
 	echo    ***____step4: findPeaks for $i.mTD folder completed____***
 	echo    ++++++++++++++++++++++++ Yahoo - samples all finished  +++++++++++++++++++++++++++++++++++
 
-	samtools rmdup $i.sorted.bam $i.sorted.rmdup.bam
-	macs2 callpeak --verbose 3 -t $i.sorted.rmdup.bam -f BAM -g hs -n $i --call-summits
+	# samtools rmdup $i.sorted.bam $i.sorted.rmdup.bam
+	picard MarkDuplicates I=$i.sorted.bam O=marked_duplicates.$i.sorted.bam M=$i.marked_dup_metrics.txt
+	macs2 callpeak --verbose 3 -t marked_duplicates.$i.sorted.bam -f BAM -g hs -n $i --call-summits --keep-dup all &
 done
 
-makeMultiWigHub.pl NUP_ChIP hg19 -url $visdir -webdir $visdir -d *.mTD
+makeMultiWigHub.pl NUP_ATAC hg19 -url $visdir -webdir $visdir -d *.mTD
+wait
