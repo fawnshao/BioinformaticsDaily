@@ -96,7 +96,7 @@ do
 	expname=`echo $peaks | sed 's/_peaks.narrowPeak//'`
 	cut -f 1-3 $peaks | uniq | awk -vvar=$expname -vOFS="\t" '{print var,$3-$2+1}'  >> NUP_ATAC.peak.length.tsv
 done
-Rscript /home1/04935/shaojf/myTools/BioinformaticsDaily/RVisualization/
+Rscript /home1/04935/shaojf/myTools/BioinformaticsDaily/RVisualization/MultipleDistribution.R NUP_ATAC.peak.length.tsv 1 2
 
 for peaks in *peaks.narrowPeak
 do
