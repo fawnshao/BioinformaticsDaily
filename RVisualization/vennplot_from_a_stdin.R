@@ -1,7 +1,7 @@
 args <- commandArgs(TRUE)
 # args <- c("shNUP53-2_Dox_E2", "shNUP53-2_E2", "3562", "30895", "51030")
 library(VennDiagram)
-pdf(file = paste(args[,1], args[2], "venn.pdf", sep = "."))
+pdf(file = paste(args[1], args[2], "venn.pdf", sep = "."))
 venn.plot <- draw.pairwise.venn(
     area1 = as.numeric(args[3]) + as.numeric(args[5]),
     area2 = as.numeric(args[4]) + as.numeric(args[5]),

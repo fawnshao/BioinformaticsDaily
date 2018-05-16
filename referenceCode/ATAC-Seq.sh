@@ -133,4 +133,5 @@ do
 	controls=`echo $pairs | cut -f 2 -d":"`
 	mergePeaks ${treats}_peaks.narrowPeak ${controls}_peaks.narrowPeak 1> $treats.$controls.mergePeaks.txt 2> $treats.$controls.mergePeaks.log
 done
-
+Rscript /home1/04935/shaojf/myTools/BioinformaticsDaily/RVisualization/vennplot_from_a_stdin.R shNUP53-2_Dox_E2 shNUP53-2_E2 9534 17120 61058
+Rscript /home1/04935/shaojf/myTools/BioinformaticsDaily/RVisualization/vennplot_from_a_stdin.R shNUP93-2_Dox_E2 shNUP93-2_E2 3562 30895 51030
