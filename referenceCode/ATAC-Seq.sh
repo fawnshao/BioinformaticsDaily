@@ -124,5 +124,13 @@ done
 for peaks in *peaks.narrowPeak
 do
 	expname=`echo $peaks | sed 's/_peaks.narrowPeak//'`
-	annotatePeaks.pl <(awk -vOFS="\t" '{print $1,$2,$3,$4,"1000","+"}' $peaks | uniq) hg19 -size given 1> $expname.simanno.txt 2> $expname.simanno.log &
+	annotatePeaks.pl <(awk -vOFS="\t" '{print $1,$2,$3,$4,"1000","+"}' $peaks | uniq) hg19 -size given -d *.mTD/ 1> $expname.simanno.txt 2> $expname.simanno.log &
 done
+
+for pairs in NS9-Xiaoyu-MCF7-shNUP53-2_Dox_E2_ATAC2_S2:NS9-Xiaoyu-MCF7-shNUP53-2_E2_ATAC1_S1 NS9-Xiaoyu-MCF7-shNUP93-1_Dox_E2_ATAC4_S4:NS9-Xiaoyu-MCF7-shNUP93-1_E2_ATAC3_S3
+do
+	treats=`echo $pairs | cut -f 1 -d":"`
+	controls=`echo $pairs | cut -f 2 -d":"`
+	mergePeaks ${treats}_peaks.narrowPeak ${controls}_peaks.narrowPeak 1> $treats.$controls.mergePeaks.txt 2> $treats.$controls.mergePeaks.log
+done
+
