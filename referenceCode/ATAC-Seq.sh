@@ -98,10 +98,31 @@ do
 done
 Rscript /home1/04935/shaojf/myTools/BioinformaticsDaily/RVisualization/MultipleDistribution.R NUP_ATAC.peak.length.tsv 1 2
 
+echo "Experiment Length" | tr " " "\t" > NUP_ATAC.nup53.peak.length.tsv
+echo "Experiment Length" | tr " " "\t" > NUP_ATAC.nup93.peak.length.tsv
+for peaks in *shNUP53*peaks.narrowPeak
+do
+	expname=`echo $peaks | sed 's/_peaks.narrowPeak//'`
+	cut -f 1-3 $peaks | uniq | awk -vvar=$expname -vOFS="\t" '{print var,$3-$2+1}'  >> NUP_ATAC.nup53.peak.length.tsv
+done
+for peaks in *shNUP93*peaks.narrowPeak
+do
+	expname=`echo $peaks | sed 's/_peaks.narrowPeak//'`
+	cut -f 1-3 $peaks | uniq | awk -vvar=$expname -vOFS="\t" '{print var,$3-$2+1}'  >> NUP_ATAC.nup93.peak.length.tsv
+done
+Rscript /home1/04935/shaojf/myTools/BioinformaticsDaily/RVisualization/MultipleDistribution.R NUP_ATAC.nup53.peak.length.tsv 1 2
+Rscript /home1/04935/shaojf/myTools/BioinformaticsDaily/RVisualization/MultipleDistribution.R NUP_ATAC.nup93.peak.length.tsv 1 2
+
+
 for peaks in *peaks.narrowPeak
 do
 	expname=`echo $peaks | sed 's/_peaks.narrowPeak//'`
-	findMotifsGenome.pl <(awk -vOFS="\t" '{print $1,$2,$3,$4,"1000","+"}' $peaks | uniq) hg19 $expname.homer.motifs -size given -p 68 -mknown /home1/04935/shaojf/myTools/HOMER/data/knownTFs/vertebrates/known.motifs > $expname.findMotifsGenome.txt &
-	annotatePeaks.pl <(awk -vOFS="\t" '{print $1,$2,$3,$4,"1000","+"}' $peaks | uniq) hg19 -m /home1/04935/shaojf/myTools/HOMER/data/knownTFs/vertebrates/known.motifs -size given -p 68 > $expname.motifs.txt &
+	findMotifsGenome.pl <(awk -vOFS="\t" '{print $1,$2,$3,$4,"1000","+"}' $peaks | uniq) hg19 $expname.homer.motifs -size given -cpu 68 -mknown /home1/04935/shaojf/myTools/HOMER/data/knownTFs/vertebrates/known.motifs > $expname.findMotifsGenome.txt &
+	annotatePeaks.pl <(awk -vOFS="\t" '{print $1,$2,$3,$4,"1000","+"}' $peaks | uniq) hg19 -m /home1/04935/shaojf/myTools/HOMER/data/knownTFs/vertebrates/known.motifs -size given -cpu 68 1> $expname.motifs.txt 2> $expname.motifs.log &
 done
 
+for peaks in *peaks.narrowPeak
+do
+	expname=`echo $peaks | sed 's/_peaks.narrowPeak//'`
+	annotatePeaks.pl <(awk -vOFS="\t" '{print $1,$2,$3,$4,"1000","+"}' $peaks | uniq) hg19 -size given 1> $expname.simanno.txt 2> $expname.simanno.log &
+done
