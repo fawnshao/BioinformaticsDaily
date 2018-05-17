@@ -147,12 +147,22 @@ cut -f 1,2,5,8,11 Nup53blrp_E2_peaks.ATAC.profile | sed '1s/NS9-Xiaoyu-MCF7-//g;
 Rscript /home1/04935/shaojf/myTools/BioinformaticsDaily/RVisualization/plotHomerProfile.R Nup53blrp_E2_peaks.ATAC.profile.coverage Nup53blrp_E2_peaks.ATAC.profile.mat
 Rscript /home1/04935/shaojf/myTools/BioinformaticsDaily/RVisualization/plotHomerProfile.R Nup53blrp_E2_peaks.ATAC.profile.coverage Nup53blrp_E2_peaks.srtbylogFC.ATAC.profile.mat
 
-annotatePeaks.pl <(awk -F"\t" -vOFS="\t" '{print $1,$2,$3,$4,$5,"+"}' Nup53blrp_E2_peaks.narrowPeak) hg19 -size 2000 -hist 5 -d *.mTD 1> 2k.Nup53blrp_E2_peaks.ATAC.profile 2> 2k.Nup53blrp_E2_peaks.ATAC.log
-annotatePeaks.pl <(awk -F"\t" -vOFS="\t" '{print $1,$2,$3,$4,$5,"+"}' Nup53blrp_E2_peaks.narrowPeak | sort -k7,7nr) hg19 -size 2000 -hist 5 -ghist -d *.mTD 1> 2k.Nup53blrp_E2_peaks.srtbylogFC.ATAC.profile.mat 2> 2k.Nup53blrp_E2_peaks.srtbylogFC.ATAC.mat.log
+annotatePeaks.pl <(awk -F"\t" -vOFS="\t" '{print $1,$2,$3,$4,$5,"+"}' Nup53blrp_E2_peaks.narrowPeak) hg19 -size 2000 -hist 5 -norm 1e6 -d *.mTD 1> 2k.Nup53blrp_E2_peaks.ATAC.profile 2> 2k.Nup53blrp_E2_peaks.ATAC.log
+annotatePeaks.pl <(awk -F"\t" -vOFS="\t" '{print $1,$2,$3,$4,$5,"+"}' Nup53blrp_E2_peaks.narrowPeak | sort -k7,7nr) hg19 -size 2000 -hist 5 -ghist -norm 1e6 -d *.mTD 1> 2k.Nup53blrp_E2_peaks.srtbylogFC.ATAC.profile.mat 2> 2k.Nup53blrp_E2_peaks.srtbylogFC.ATAC.mat.log
 cut -f 1,2,5,8,11 2k.Nup53blrp_E2_peaks.ATAC.profile | sed '1s/NS9-Xiaoyu-MCF7-//g;1s/_ATAC[0-9]_S[0-9]//g;1s/.mTD Coverage//g' > 2k.Nup53blrp_E2_peaks.ATAC.profile.coverage
 Rscript /home1/04935/shaojf/myTools/BioinformaticsDaily/RVisualization/plotHomerProfile.R 2k.Nup53blrp_E2_peaks.ATAC.profile.coverage 2k.Nup53blrp_E2_peaks.srtbylogFC.ATAC.profile.mat
-#######################################################
 
+chippeaks=Nup53blrp_E2_peaks.narrowPeak
+pre=Nup53blrp_E2
+for peaks in cutsites.sh*_peaks.narrowPeak
+do
+	tail=`echo $peaks | sed 's/cutsites.//;s/_peaks.narrowPeak//;'`
+	mergePeaks $chippeaks $peaks 1> $pre.$tail.mergePeaks.txt 2> $pre.$tail.mergePeaks.log
+	tmp=`tail -3 $pre.$tail.mergePeaks.log | cut -f 3 | tr "\n" " "`
+	Rscript /home1/04935/shaojf/myTools/BioinformaticsDaily/RVisualization/vennplot_from_a_stdin.R $tail $pre $tmp
+done
+mergePeaks $chippeaks cutsites.shNUP53-2_*_peaks.narrowPeak 1> $pre.shNUP53.mergePeaks.txt 2> $pre.shNUP53.mergePeaks.log
+#######################################################
 
 
 ######### QC and visualization #########

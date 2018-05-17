@@ -1,6 +1,7 @@
 args <- commandArgs(TRUE)
 # args <- c("Nup53blrp_E2_peaks.ATAC.profile.coverage", "Nup53blrp_E2_peaks.ATAC.profile.mat")
 # args <- c("Nup53blrp_E2_peaks.ATAC.profile.coverage", "Nup53blrp_E2_peaks.srtbylogFC.ATAC.profile.mat")
+# args <- c("2k.Nup53blrp_E2_peaks.ATAC.profile.coverage", "2k.Nup53blrp_E2_peaks.srtbylogFC.ATAC.profile.mat")
 library(ggplot2)
 library(data.table)
 library(reshape2)
@@ -33,8 +34,10 @@ colors <- colorRampPalette(c("white", "red"))(100)
 # 	cluster_cols = F, cluster_rows = F)
 # dev.off()
 
-png(filename = paste(pheatmapfile, "pheatmap.png", sep = "."), width = 2500, height = 1200)
 x <- log2(data.matrix(pheatmapdata[,-1]) + 1)
+# x <- data.matrix(pheatmapdata[,-1])
+x[x < 0] <- 0
+png(filename = paste(pheatmapfile, "pheatmap.png", sep = "."), width = 2500, height = 1200)
 myplot <- pheatmap(x, scale = "none",
 	show_rownames = F, show_colnames = F, color = colors,
 	cluster_cols = F, cluster_rows = F)
