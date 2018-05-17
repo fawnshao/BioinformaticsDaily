@@ -28,9 +28,9 @@ if(length(args)==5){
 if(length(args)==10){
     pdf(file = paste(args[1], args[2], args[3], "venn.pdf", sep = "."))
     venn.plot <- draw.triple.venn(
-        area1 = as.numeric(args[4]) + as.numeric(args[7]) + as.numeric(args[8]) + as.numeric(args[10]),
-        area2 = as.numeric(args[5]) + as.numeric(args[8]) + as.numeric(args[9]) + as.numeric(args[10]),
-        area3 = as.numeric(args[6]) + as.numeric(args[7]) + as.numeric(args[9]) + as.numeric(args[10]),
+        area1 = as.numeric(args[4]) + as.numeric(args[7]) + as.numeric(args[9]) + as.numeric(args[10]),
+        area2 = as.numeric(args[5]) + as.numeric(args[7]) + as.numeric(args[8]) + as.numeric(args[10]),
+        area3 = as.numeric(args[6]) + as.numeric(args[8]) + as.numeric(args[9]) + as.numeric(args[10]),
         n12 = as.numeric(args[7]) + as.numeric(args[10]), 
         n23 = as.numeric(args[8]) + as.numeric(args[10]),
         n13 = as.numeric(args[9]) + as.numeric(args[10]),
