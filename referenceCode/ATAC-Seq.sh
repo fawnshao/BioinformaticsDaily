@@ -162,6 +162,8 @@ do
 	Rscript /home1/04935/shaojf/myTools/BioinformaticsDaily/RVisualization/vennplot_from_a_stdin.R $tail $pre $tmp
 done
 mergePeaks $chippeaks cutsites.shNUP53-2_*_peaks.narrowPeak 1> $pre.shNUP53.mergePeaks.txt 2> $pre.shNUP53.mergePeaks.log
+tmp=`tail -7 $pre.shNUP53.mergePeaks.log | cut -f 4 | tr "\n" " "`
+Rscript /home1/04935/shaojf/myTools/BioinformaticsDaily/RVisualization/vennplot_from_a_stdin.R shNUP53-2_Dox_E2 shNUP53-2_E2 $pre 13743 3161 2165 36778 192 884 10097
 #######################################################
 
 
