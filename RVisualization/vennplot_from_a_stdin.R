@@ -39,7 +39,7 @@ if(length(args)==10){
         fill = c("blue", "red", "green"),
         lty = "blank",
         scaled = TRUE,
-        alpha = rep(0.3, 2),
+        alpha = rep(0.3, 3),
         ext.line.lty = "dashed"
     )
     dev.off()
