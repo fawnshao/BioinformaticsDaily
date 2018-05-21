@@ -164,8 +164,38 @@ done
 mergePeaks $chippeaks cutsites.shNUP53-2_*_peaks.narrowPeak 1> $pre.shNUP53.mergePeaks.txt 2> $pre.shNUP53.mergePeaks.log
 # tmp=`tail -7 $pre.shNUP53.mergePeaks.log | cut -f 4 | tr "\n" " "`
 Rscript /home1/04935/shaojf/myTools/BioinformaticsDaily/RVisualization/vennplot_from_a_stdin.R shNUP53-2_Dox_E2 shNUP53-2_E2 $pre 3161 13743 2165 36778 884 192 10097
+
+# more Nup53blrp_E2.shNUP53.mergePeaks.txt | grep -e "cutsites.shNUP53-2_E2_peaks.narrowPeak" -e "cutsites.shNUP53-2_Dox_E2_peaks.narrowPeak" | grep "Nup53" | grep -v "Nup53blrp_E2_peaks.narrowPeak|cutsites.shNUP53-2_Dox_E2_peaks.narrowPeak|cutsites.shNUP53-2_E2_peaks.narrowPeak" | tail -n +2 | sort -k7 | cut -f 1-7 > Nup53blrp_E2.shNUP53.srt.txt
+# annotatePeaks.pl Nup53blrp_E2.shNUP53.srt.txt hg19 -size 6000 -hist 25 -ghist -norm 1e6 -d *.mTD 1> Nup53blrp_E2.Doxornot.ATAC.profile.mat 2> Nup53blrp_E2.Doxornot.ATAC.mat.log
+
+more Nup53blrp_E2.shNUP53.mergePeaks.txt | grep "Nup53blrp_E2_peaks.narrowPeak|cutsites.shNUP53-2_Dox_E2_peaks.narrowPeak|cutsites.shNUP53-2_E2_peaks.narrowPeak" | tail -n +2 | sort -k7 | cut -f 1-7 > Nup53blrp_E2.shNUP53.srt.txt
+more Nup53blrp_E2.shNUP53.mergePeaks.txt | grep -e "cutsites.shNUP53-2_E2_peaks.narrowPeak" -e "cutsites.shNUP53-2_Dox_E2_peaks.narrowPeak" | grep "Nup53" | grep -v "Nup53blrp_E2_peaks.narrowPeak|cutsites.shNUP53-2_Dox_E2_peaks.narrowPeak|cutsites.shNUP53-2_E2_peaks.narrowPeak" | tail -n +2 | sort -k7 | cut -f 1-7 >> Nup53blrp_E2.shNUP53.srt.txt
+annotatePeaks.pl Nup53blrp_E2.shNUP53.srt.txt hg19 -size 6000 -hist 25 -ghist -norm 1e6 -d *.mTD 1> Nup53blrp_E2.Doxornot.ATAC.profile.mat 2> Nup53blrp_E2.Doxornot.ATAC.mat.log
 #######################################################
 
+######### QC, use deeptools #########
+#### add ChIP-Seq, Gro-Seq, as a control
+multiBigwigSummary bins --binSize 1000 --bwfiles bigwigs/*ucsc.bigWig other.bw/*ucsc.bigWig --outFileName MCF7-NUP.bin1000.out.npz --outRawCounts MCF7-NUP.bin1000.out.coverage
+plotCorrelation -in MCF7-NUP.bin1000.out.npz -o MCF7-NUP.bin1000.out.pdf -c pearson -p heatmap --skipZeros --removeOutliers --plotFileFormat pdf --labels ATAC.shNUP53-2_Dox_E2 ATAC.shNUP53-2_E2 ATAC.shNUP93-1_Dox_E2 ATAC.shNUP93-1_E2 ChIP.nup53blrp_EtOH ChIP.nup53blrp_E2 ChIP.Nup93scbt_EtOH ChIP.Nup93scbt_E2 ChIP.Nup93bethyl_EtOH ChIP.Nup93bethyl_E2 ChIP.GRO.siCTL-E2-GROneg GRO.siCTL-E2-GROpos GRO.siNUP53-E2-GROneg GRO.siNUP53-E2-GROpos GRO.siNUP93-E2-GROneg GRO.siNUP93-E2-GROpos
+
+
+multiBigwigSummary bins --binSize 1000 --bwfiles bigwigs/*ucsc.bigWig --outFileName NS9-Xiaoyu-MCF7-NUP.ATAC.bin1000.out.npz --outRawCounts NS9-Xiaoyu-MCF7-NUP.ATAC.bin1000.out.coverage
+plotCorrelation -in NS9-Xiaoyu-MCF7-NUP.ATAC.bin1000.out.npz -o NS9-Xiaoyu-MCF7-NUP.ATAC.bin1000.out.pdf -c pearson -p heatmap --skipZeros --removeOutliers --plotFileFormat pdf
+
+multiBigwigSummary BED-file --BED <(cut -f 1-3 Nup53blrp_E2_peaks.narrowPeak | uniq | awk '{print $0"\t"NR}') --bwfiles bigwigs/*ucsc.bigWig --outFileName NS9-Xiaoyu-MCF7-NUP.ATAC.Nup53blrp_E2_peaks.out.npz --outRawCounts NS9-Xiaoyu-MCF7-NUP.ATAC.Nup53blrp_E2_peaks.out.coverage
+plotCorrelation -in NS9-Xiaoyu-MCF7-NUP.ATAC.Nup53blrp_E2_peaks.out.npz -o NS9-Xiaoyu-MCF7-NUP.ATAC.Nup53blrp_E2_peaks.out.pdf -c pearson -p heatmap --skipZeros --removeOutliers --plotFileFormat pdf
+
+plotFingerprint --bamfiles *.bam -plot NS9-Xiaoyu-MCF7-NUP.ATAC.fingerprint.pdf --ignoreDuplicates --plotFileFormat pdf
+
+cut -f 1-3 Nup53blrp_E2_peaks.narrowPeak | uniq | awk '{print $0"\t"NR}' > tmp.bed
+computeMatrix reference-point -R tmp.bed -S bigwigs/*ucsc.bigWig -out NS9-Xiaoyu-MCF7-NUP.ATAC.Nup53blrp_E2_peaks.computeMatrix.gz --referencePoint center -b 3000 -a 3000 -bs 10 
+plotHeatmap -m NS9-Xiaoyu-MCF7-NUP.ATAC.Nup53blrp_E2_peaks.computeMatrix.gz -o NS9-Xiaoyu-MCF7-NUP.ATAC.Nup53blrp_E2_peaks.computeMatrix.plotHeatmap.pdf --kmeans 3 --colorMap Greens --whatToShow 'heatmap and colorbar' --plotFileFormat pdf --samplesLabel shNUP53-2_Dox_E2 shNUP53-2_E2 shNUP93-1_Dox_E2 shNUP93-1_E2 --heatmapWidth 10
+computeMatrix reference-point -R tmp.bed -S bigwigs/*ucsc.bigWig -out NS9-Xiaoyu-MCF7-NUP.ATAC.Nup53blrp_E2_peaks.computeMatrix.1k.gz --referencePoint center -b 1000 -a 1000 -bs 10 
+plotHeatmap -m NS9-Xiaoyu-MCF7-NUP.ATAC.Nup53blrp_E2_peaks.computeMatrix.1k.gz -o NS9-Xiaoyu-MCF7-NUP.ATAC.Nup53blrp_E2_peaks.computeMatrix.1k.plotHeatmap.pdf --kmeans 3 --colorMap Greens --whatToShow 'heatmap and colorbar' --plotFileFormat pdf --samplesLabel shNUP53-2_Dox_E2 shNUP53-2_E2 shNUP93-1_Dox_E2 shNUP93-1_E2 --heatmapWidth 10
+
+plotProfile -m NS9-Xiaoyu-MCF7-NUP.ATAC.Nup53blrp_E2_peaks.computeMatrix.gz -o NS9-Xiaoyu-MCF7-NUP.ATAC.Nup53blrp_E2_peaks.computeMatrix.plotProfile.pdf --kmeans 1 --plotFileFormat pdf --samplesLabel shNUP53-2_Dox_E2 shNUP53-2_E2 shNUP93-1_Dox_E2 shNUP93-1_E2 --plotWidth 10 --plotHeight 10 --refPointLabel PeakCenter --plotType fill
+plotProfile -m NS9-Xiaoyu-MCF7-NUP.ATAC.Nup53blrp_E2_peaks.computeMatrix.1k.gz -o NS9-Xiaoyu-MCF7-NUP.ATAC.Nup53blrp_E2_peaks.computeMatrix.1k.plotProfile.pdf --kmeans 1 --plotFileFormat pdf --samplesLabel shNUP53-2_Dox_E2 shNUP53-2_E2 shNUP93-1_Dox_E2 shNUP93-1_E2 --plotWidth 10 --plotHeight 10 --refPointLabel PeakCenter --plotType fill
+#####################################
 
 ######### QC and visualization #########
 echo "Experiment Length" | tr " " "\t" > NUP_ATAC.peak.length.tsv

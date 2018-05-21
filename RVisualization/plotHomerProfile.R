@@ -2,6 +2,8 @@ args <- commandArgs(TRUE)
 # args <- c("Nup53blrp_E2_peaks.ATAC.profile.coverage", "Nup53blrp_E2_peaks.ATAC.profile.mat")
 # args <- c("Nup53blrp_E2_peaks.ATAC.profile.coverage", "Nup53blrp_E2_peaks.srtbylogFC.ATAC.profile.mat")
 # args <- c("2k.Nup53blrp_E2_peaks.ATAC.profile.coverage", "2k.Nup53blrp_E2_peaks.srtbylogFC.ATAC.profile.mat")
+# args <- c("abc", "Nup53blrp_E2.Doxornot.ATAC.profile.mat")
+
 library(ggplot2)
 library(data.table)
 library(reshape2)
@@ -42,3 +44,13 @@ myplot <- pheatmap(x, scale = "none",
 	show_rownames = F, show_colnames = F, color = colors,
 	cluster_cols = F, cluster_rows = F)
 dev.off()
+
+groups <- ncol(x)/241
+for(i in 1:groups){
+	png(filename = paste(pheatmapfile, i, "pheatmap.png", sep = "."), width = 1500, height = 1200)
+	myplot <- pheatmap(x[,(i - 1) * 241 + c(1:241)], scale = "none",
+		show_rownames = F, show_colnames = F, color = colors,
+		cluster_cols = F, cluster_rows = F)
+	dev.off()
+}
+
