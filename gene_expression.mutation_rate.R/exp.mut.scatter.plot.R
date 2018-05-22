@@ -10,7 +10,7 @@ for(i in 1:length(targets)){
 	if(nrow(datay) > 10){
 		xmax <- quantile(datay$MutCounts, probs = 0.95)
 		myplot <- ggplot(data = datay, aes(x = MutCounts, y = NormalizedValues, colour = types, shape = genes)) + 
-			geom_point() + 
+			geom_point() + geom_smooth() +
 			scale_x_continuous(limits = c(0, xmax)) +
 			labs(title = paste(args[1], targets[i], sep = " "), caption = date()) + 
 			theme(axis.text.x = element_text(angle = 60, hjust = 1))
