@@ -8,7 +8,7 @@ targets <- c("exon", "intron", "Intergenic", "promoter-TSS")
 for(i in 1:length(targets)){
 	datay <- datax[MutRegions == targets[i],]
 	if(nrow(datay) > 50){
-		xmax <- quantile(datay$MutCounts, probs = 0.99)
+		xmax <- quantile(datay$MutCounts, probs = 0.95)
 		myplot <- ggplot(data = datay, aes(x = MutCounts, y = NormalizedValues, colour = types, shape = genes)) + 
 			geom_point() + geom_smooth(method = lm) +
 			scale_x_continuous(limits = c(0, xmax)) +
