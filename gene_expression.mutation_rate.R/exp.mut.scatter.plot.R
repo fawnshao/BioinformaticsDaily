@@ -4,11 +4,11 @@ args <- commandArgs(TRUE) # c("WGS.mut.KAT5.exp_seq.READ-US.tsv")
 datax <- fread(args[1], sep = "\t", header = F)
 colnames(datax) <- c("cancers", "samples", "genes", "NormalizedValues", "types", "MutRegions", "MutCounts")
 
-targets <- c("exon", "Intergenic", "promoter-TSS")
+targets <- c("exon", "intron", "Intergenic", "promoter-TSS")
 for(i in 1:length(targets)){
 	datay <- datax[MutRegions == targets[i],]
 	if(nrow(datay) > 50){
-		xmax <- quantile(datay$MutCounts, probs = 0.95)
+		xmax <- quantile(datay$MutCounts, probs = 0.99)
 		myplot <- ggplot(data = datay, aes(x = MutCounts, y = NormalizedValues, colour = types, shape = genes)) + 
 			geom_point() + geom_smooth(method = lm) +
 			scale_x_continuous(limits = c(0, xmax)) +
