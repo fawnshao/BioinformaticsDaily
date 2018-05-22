@@ -2,7 +2,7 @@ library(data.table)
 library(ggplot2)
 args <- commandArgs(TRUE)
 datax <- fread(args[1], sep = "\t", header = F)
-colnames(datax) <- c("samples", "cancers", "genes", "NormalizedValues")
+colnames(datax) <- c("cancers", "samples", "genes", "NormalizedValues")
 
 # ymax <- quantile(datax$NormalizedValues, probs = 0.95)
 myplot <- ggplot(data = datax, aes(x = genes, y = NormalizedValues, fill = genes)) + 
