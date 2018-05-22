@@ -2,6 +2,7 @@
 # rclone sync /home1/04935/shaojf/stampede2/TIP60.KAT5/ mygoogle:TIP60.KAT5/
 rboxplot=/home1/04935/shaojf/myTools/BioinformaticsDaily/RVisualization/myboxplot.R
 rquantile=/home1/04935/shaojf/myTools/BioinformaticsDaily/gene_expression.mutation_rate.R/data.quantile.R
+rscatterplot=/home1/04935/shaojf/myTools/BioinformaticsDaily/gene_expression.mutation_rate.R/exp.mut.scatter.plot.R
 myperl=/home1/04935/shaojf/myTools/BioinformaticsDaily/textProcess/add_any_2files_together.pl
 gene=KAT5
 grep KAT5 ~/stampede2/refs/hg19.refGene.tss.uniq.srt.bed > KAT5.hg19.refGene.tss
@@ -108,4 +109,7 @@ do
 	perl $myperl WGS.mut.byspeciman.stats $f 2 1 | grep -v "/" | cut -f 1-5,7,9 > WGS.mut.$pre.tsv
 done
 
-
+for f in `ll WGS.mut.KAT5.exp_* | awk '$5>0{print $9}'`
+do
+	Rscript $rscatterplot $f
+done
