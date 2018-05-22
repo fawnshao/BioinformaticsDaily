@@ -7,10 +7,10 @@ colnames(datax) <- c("cancers", "samples", "genes", "NormalizedValues", "types",
 targets <- c("exon", "Intergenic", "promoter-TSS")
 for(i in 1:length(targets)){
 	datay <- datax[MutRegions == targets[i],]
-	if(nrow(datay) > 30){
+	if(nrow(datay) > 50){
 		xmax <- quantile(datay$MutCounts, probs = 0.95)
 		myplot <- ggplot(data = datay, aes(x = MutCounts, y = NormalizedValues, colour = types, shape = genes)) + 
-			geom_point() + geom_smooth() +
+			geom_point() + geom_smooth(method = lm) +
 			scale_x_continuous(limits = c(0, xmax)) +
 			labs(title = paste(args[1], targets[i], sep = " "), caption = date()) + 
 			theme(axis.text.x = element_text(angle = 60, hjust = 1))
