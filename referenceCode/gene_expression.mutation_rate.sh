@@ -109,7 +109,7 @@ do
 	perl $myperl WGS.mut.byspeciman.stats $f 2 1 | grep -v "/" | cut -f 1-5,7,9 > WGS.mut.$pre.tsv
 done
 
-for f in `ll WGS.mut.KAT5.exp_* | awk '$5>0{print $9}'`
+for f in `ll WGS.mut.KAT5.exp_* | awk '$5 > 100{print $9}'`
 do
 	Rscript $rscatterplot $f
 done
