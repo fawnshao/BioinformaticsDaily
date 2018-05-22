@@ -10,7 +10,7 @@ myplot <- ggplot(data = datax, aes(x = types, y = NormalizedValues, fill = genes
 	scale_y_continuous(limits = c(0, ymax)) +
 	# facet_wrap(. ~ genes) +
 	labs(title = args[1], caption = date()) + 
-	theme(legend.position = "none", axis.text.x = element_text(angle = 60, hjust = 1))
+	theme(axis.text.x = element_text(angle = 60, hjust = 1))
 png(filename = paste(args[1], "boxplot.png", sep = "."), width = 400, height = 600)
 print(myplot)
 dev.off()
