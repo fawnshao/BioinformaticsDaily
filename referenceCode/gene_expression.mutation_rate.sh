@@ -5,6 +5,7 @@ rboxplot=/home1/04935/shaojf/myTools/BioinformaticsDaily/RVisualization/myboxplo
 rquantile=/home1/04935/shaojf/myTools/BioinformaticsDaily/gene_expression.mutation_rate.R/data.quantile.R
 rscatterplot=/home1/04935/shaojf/myTools/BioinformaticsDaily/gene_expression.mutation_rate.R/exp.mut.scatter.plot.R
 rquantileboxplot=/home1/04935/shaojf/myTools/BioinformaticsDaily/gene_expression.mutation_rate.R/exp.mut.boxplot.R
+rquantileviolin=/home1/04935/shaojf/myTools/BioinformaticsDaily/gene_expression.mutation_rate.R/exp.mut.violinplot.R
 myperl=/home1/04935/shaojf/myTools/BioinformaticsDaily/textProcess/add_any_2files_together.pl
 gene=KAT5
 grep KAT5 ~/stampede2/refs/hg19.refGene.tss.uniq.srt.bed > KAT5.hg19.refGene.tss
@@ -135,6 +136,11 @@ done
 for f in `wc -l quantile.exp.mut.homer.KAT5.exp_*.tsv | awk '$1 > 100 && $2!="total"{print $2}'`
 do
 	Rscript $rquantileboxplot $f
+done
+
+for f in `wc -l quantile.exp.mut.homer.KAT5.exp_*.tsv | awk '$1 > 100 && $2!="total"{print $2}'`
+do
+	Rscript $rquantileviolin $f
 done
 
 ###########
