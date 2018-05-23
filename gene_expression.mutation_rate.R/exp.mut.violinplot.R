@@ -12,7 +12,7 @@ for(i in 1:length(targets)){
 		ymin <- min(datay$MutCounts)
 		ymax <- quantile(datay$MutCounts, probs = 0.9)
 		myplot <- ggplot(data = datay, aes(x = genes, y = MutCounts, fill = ExpressionQuantile)) + 
-			geom_violin(position = position_dodge(1), outlier.alpha = 0.1, outlier.size = 0.1) +
+			geom_violin(position = position_dodge(1)) +
 			geom_dotplot(binaxis = 'y', stackdir = 'center', position = position_dodge(1)) + 
 			scale_y_continuous(limits = c(ymin, ymax)) +
 			labs(title = paste(args[1], targets[i], sep = " "), caption = date()) + 
