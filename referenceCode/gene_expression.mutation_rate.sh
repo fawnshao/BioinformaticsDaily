@@ -124,6 +124,18 @@ do
 	Rscript $rscatterplot $f
 done
 
+# ln -s ../exprs/KAT5.exp_*tsv.gz.txt.specimen.tumors.*.tsv .
+for f in KAT5.exp_*tsv.gz.txt.specimen.tumors.*.tsv
+do
+	pre=`echo $f | cut -f 1-3 -d "."`
+	class=`echo $f | cut -f 9 -d "."`
+	perl $myperl WGS.mut.byspeciman.stats <(sed 's/"//g' $f) 1 1 | grep -v "/" | cut -f 1-5,8,9 | awk -v var=$class '{print $0"\t"var}' >> quantile.exp.mut.homer.$pre.tsv
+done
+
+for f in `wc -l quantile.exp.mut.homer.KAT5.exp_*.tsv | awk '$1 > 100 && $2!="total"{print $2}'`
+do
+	Rscript $rquantileboxplot $f
+done
 
 ###########
 # cd /home1/04935/shaojf/stampede2/TIP60.KAT5/sv
@@ -149,6 +161,32 @@ done
 for f in `ll exp.sv.KAT5.exp_* | awk '$5 > 100{print $9}'`
 do
 	Rscript $rscatterplot $f
+done
+
+for pre in `ll exp.sv.KAT5.exp_*.tsv | awk '$5 > 100{print $9}' | cut -f 5 -d"."`
+do
+	f=structural_somatic_mutation.$pre.tsv.gz
+	annotatePeaks.pl <(gunzip -c $f | awk -F"\t" -vOFS="\t" '{print "chr"$12,$13-1,$13,$3"|"$2"|"$7"|"$22"\nchr"$17,$18-1,$18,$3"|"$2"|"$7"|"$22}' | tail -n +3 | sed 's/ /./g') hg19 1> $pre.homer 2>$pre.homer.log &
+done
+
+echo "cancers specimens regions counts" | tr " " "\t" > sv.homer.byspeciman.stats
+for f in *.homer
+do
+	pre=`echo $f | sed 's/.homer//'`
+	awk -F"\t" '{print $1"\t"$8}' $f | tail -n +2 | sed 's/ UTR/UTR/;s/|/\t/' | awk -F"\t" '{print $1,$3}' | awk '{print $1"\t"$2}' | sort | uniq -c | awk -v var=$pre -vOFS="\t" '{printf "%s\t%s\t%s\t%d\n", var,$2,$3,$1}' >> sv.homer.byspeciman.stats
+done
+
+# ln -s ../exprs/KAT5.exp_*tsv.gz.txt.specimen.tumors.*.tsv .
+for f in KAT5.exp_*tsv.gz.txt.specimen.tumors.*.tsv
+do
+	pre=`echo $f | cut -f 1-3 -d "."`
+	class=`echo $f | cut -f 9 -d "."`
+	perl $myperl sv.homer.byspeciman.stats <(sed 's/"//g' $f) 1 1 | grep -v "/" | cut -f 1-5,8,9 | awk -v var=$class '{print $0"\t"var}' >> quantile.sv.homer.$pre.tsv
+done
+
+for f in `wc -l quantile.sv.homer.KAT5.exp_*.tsv | awk '$1 > 100 && $2!="total"{print $2}'`
+do
+	Rscript $rquantileboxplot $f
 done
 
 ###########
@@ -208,7 +246,7 @@ do
 done
 
 
-# ln -s ../exprs/KAT5.exp_*tsv.gz.txt.specimen.tumors.*.tsv
+# ln -s ../exprs/KAT5.exp_*tsv.gz.txt.specimen.tumors.*.tsv .
 for f in KAT5.exp_*tsv.gz.txt.specimen.tumors.*.tsv
 do
 	pre=`echo $f | cut -f 1-3 -d "."`
