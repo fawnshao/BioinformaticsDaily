@@ -164,3 +164,17 @@ do
 		gunzip -c $f | cut -f 2-3,8,20 | tail -n +2 | sed 's/ /./g' | sort | uniq -c | awk -v OFS="\t" '{print $2,$3,$4,$5,$1}' >> cnv.byspeciman.stats
 	fi
 done
+
+awk '$4=="WGS"' cnv.byspeciman.stats > WGS.cnv.byspeciman.stats
+awk '$4=="non-NGS"' cnv.byspeciman.stats > non-NGS.cnv.byspeciman.stats
+for f in KAT5.exp_*.tsv.gz.txt.specimen
+do
+	pre=`echo $f | sed 's/.tsv.gz.txt.specimen//'`
+	perl $myperl WGS.cnv.byspeciman.stats $f 1 1 | grep -v "/" | cut -f 1-5,8,10 > exp.WGS.cnv.$pre.tsv
+	perl $myperl non-NGS.cnv.byspeciman.stats $f 1 1 | grep -v "/" | cut -f 1-5,8,10 > exp.non-NGS.cnv.$pre.tsv
+done
+
+for f in `ll exp.*.cnv.KAT5.exp_* | awk '$5 > 100{print $9}'`
+do
+	Rscript $rscatterplot $f
+done
