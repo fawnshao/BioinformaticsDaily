@@ -174,7 +174,51 @@ do
 	perl $myperl non-NGS.cnv.byspeciman.stats $f 1 1 | grep -v "/" | cut -f 1-5,8,10 > exp.non-NGS.cnv.$pre.tsv
 done
 
-for f in `ll exp.*.cnv.KAT5.exp_* | awk '$5 > 100{print $9}'`
+for f in `ll exp.*.cnv.KAT5.exp_*.tsv | awk '$5 > 100{print $9}'`
 do
 	Rscript $rscatterplot $f
 done
+
+for pre in `ll exp.*.cnv.KAT5.exp_*.tsv | awk '$5 > 100{print $9}' | cut -f 6 -d"." | sort | uniq`
+do
+	f=copy_number_somatic_mutation.$pre.tsv.gz
+	annotatePeaks.pl <(gunzip -c $f | awk -F"\t" -vOFS="\t" '{print "chr"$12,$13,$14,$3"|"$2"|"$15"|"$8"|"$20}' | tail -n +2 | sed 's/ /./g') hg19 1> $pre.homer 2>$pre.homer.log &
+done
+
+echo "cancers specimens regions counts" | tr " " "\t" > WGS.cnv.homer.byspeciman.stats
+echo "cancers specimens regions counts" | tr " " "\t" > non-NGS.cnv.homer.byspeciman.stats
+for f in *.homer
+do
+	pre=`echo $f | sed 's/.homer//'`
+	awk -F"\t" '$1~/\|WGS/{print $1"\t"$8}' $f | sed 's/ UTR/UTR/;s/|/\t/' | awk -F"\t" '{print $1,$3}' | awk '{print $1"\t"$2}' | sort | uniq -c | awk -v var=$pre -vOFS="\t" '{printf "%s\t%s\t%s\t%d\n", var,$2,$3,$1}' >> WGS.cnv.homer.byspeciman.stats
+	awk -F"\t" '$1~/\|non-NGS/{print $1"\t"$8}' $f | sed 's/ UTR/UTR/;s/|/\t/' | awk -F"\t" '{print $1,$3}' | awk '{print $1"\t"$2}' | sort | uniq -c | awk -v var=$pre -vOFS="\t" '{printf "%s\t%s\t%s\t%d\n", var,$2,$3,$1}' >> non-NGS.cnv.homer.byspeciman.stats
+done
+
+for f in KAT5.exp_*.tsv.gz.txt.specimen
+do
+	pre=`echo $f | sed 's/.tsv.gz.txt.specimen//'`
+	perl $myperl WGS.cnv.homer.byspeciman.stats $f 1 1 | grep -v "/" | cut -f 1-5,8,9 > WGS.cnv.homer.$pre.tsv
+	perl $myperl non-NGS.cnv.homer.byspeciman.stats $f 1 1 | grep -v "/" | cut -f 1-5,8,9 > non-NGS.cnv.homer.$pre.tsv
+done
+
+for f in `ll *cnv.homer.KAT5.exp_*.tsv | awk '$5 > 100{print $9}'`
+do
+	Rscript $rscatterplot $f
+done
+
+
+# ln -s ../exprs/KAT5.exp_*tsv.gz.txt.specimen.tumors.*.tsv
+for f in KAT5.exp_*tsv.gz.txt.specimen.tumors.*.tsv
+do
+	pre=`echo $f | cut -f 1-3 -d "."`
+	class=`echo $f | cut -f 9 -d "."`
+	perl $myperl WGS.cnv.homer.byspeciman.stats <(sed 's/"//g' $f) 1 1 | grep -v "/" | cut -f 1-5,8,9 | awk -v var=$class '{print $0"\t"var}' >> quantile.WGS.cnv.homer.$pre.tsv
+	perl $myperl non-NGS.cnv.homer.byspeciman.stats <(sed 's/"//g' $f) 1 1 | grep -v "/" | cut -f 1-5,8,9 | awk -v var=$class '{print $0"\t"var}' >> quantile.non-NGS.cnv.homer.$pre.tsv
+done
+
+for f in `wc -l quantile.*cnv.homer.KAT5.exp_*.tsv | awk '$1 > 100 && $2!="total"{print $2}'`
+do
+	Rscript $rscatterplot $f
+done
+
+
