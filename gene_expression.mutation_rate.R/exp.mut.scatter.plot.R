@@ -4,7 +4,10 @@ args <- commandArgs(TRUE) # c("WGS.mut.KAT5.exp_seq.READ-US.tsv")
 datax <- fread(args[1], sep = "\t", header = F)
 colnames(datax) <- c("cancers", "samples", "genes", "NormalizedValues", "types", "MutRegions", "MutCounts")
 
-targets <- c("exon", "intron", "Intergenic", "promoter-TSS")
+targets <- c("exon", "intron", "Intergenic", "promoter-TSS", 
+	"tandem.duplication", "interchromosomal.rearrangement.-.unknown.type", "deletion", "inversion",
+	"amp.LOH", "copy.neutral", "copy.neutral.LOH", "gain", "hemizygous.del.LOH", "loss", "undetermined"
+	)
 for(i in 1:length(targets)){
 	datay <- datax[MutRegions == targets[i],]
 	if(nrow(datay) > 50){

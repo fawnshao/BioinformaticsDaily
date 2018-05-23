@@ -1,5 +1,6 @@
 #!/bin/sh
 # rclone sync /home1/04935/shaojf/stampede2/TIP60.KAT5/ mygoogle:TIP60.KAT5/
+# how about CNV
 rboxplot=/home1/04935/shaojf/myTools/BioinformaticsDaily/RVisualization/myboxplot.R
 rquantile=/home1/04935/shaojf/myTools/BioinformaticsDaily/gene_expression.mutation_rate.R/data.quantile.R
 rscatterplot=/home1/04935/shaojf/myTools/BioinformaticsDaily/gene_expression.mutation_rate.R/exp.mut.scatter.plot.R
@@ -47,6 +48,14 @@ do
 	pre=`echo $f | sed 's/simple_somatic_mutation.open.//;s/.tsv.gz.srt.bed//'`
 	annotatePeaks.pl <(awk '{print "chr"$0}' $f) hg19 1> $pre.homer 2>$pre.homer.log &
 done
+
+# /bin/sbatch -A Functional-and-struc run.sh 
+# split -l 200000 simple_somatic_mutation.open.MELA-AU.tsv.gz.srt.bed
+# for f in x*
+# do
+# 	annotatePeaks.pl <(awk '{print "chr"$0}' $f) hg19 1> $f.homer 2>$f.homer.log &
+# done
+
 
 # grep "Done annotating peaks file" *.log
 # for pre in `grep "terminate" *.log | cut -f 1 -d "."`
@@ -100,16 +109,58 @@ echo "cancers specimens regions counts" | tr " " "\t" > WGS.mut.byspeciman.stats
 for f in *.homer
 do
 	pre=`echo $f | sed 's/.homer//'`
-	awk -F"\t" '$1~/\|WGS/{print $1"\t"$8}' $f | sed 's/ UTR/UTR/;s/|/\t/' | awk -F"\t" '{print $1,$3}' | awk '{print $1"\t"$2}' | sort | uniq -c | awk -v var=$pre -vOFS="\t" '{printf "%s\t%s\t%s\t%d\n", var,$3,$2,$1}' >> WGS.mut.byspeciman.stats
+	awk -F"\t" '$1~/\|WGS/{print $1"\t"$8}' $f | sed 's/ UTR/UTR/;s/|/\t/' | awk -F"\t" '{print $1,$3}' | awk '{print $1"\t"$2}' | sort | uniq -c | awk -v var=$pre -vOFS="\t" '{printf "%s\t%s\t%s\t%d\n", var,$2,$3,$1}' >> WGS.mut.byspeciman.stats
 done
 
 for f in KAT5.exp_*.tsv.gz.txt.specimen
 do
 	pre=`echo $f | sed 's/.tsv.gz.txt.specimen//'`
-	perl $myperl WGS.mut.byspeciman.stats $f 2 1 | grep -v "/" | cut -f 1-5,7,9 > WGS.mut.$pre.tsv
+	perl $myperl WGS.mut.byspeciman.stats $f 1 1 | grep -v "/" | cut -f 1-5,8,9 > WGS.mut.$pre.tsv
 done
 
 for f in `ll WGS.mut.KAT5.exp_* | awk '$5 > 100{print $9}'`
 do
 	Rscript $rscatterplot $f
+done
+
+
+###########
+# cd /home1/04935/shaojf/stampede2/TIP60.KAT5/sv
+# ln -s ../exprs/KAT5.exp_*tsv.gz.txt.specimen .
+echo "cancers specimens svtypes seqtypes counts" | tr " " "\t" > sv.byspeciman.stats
+for f in structural_somatic_mutation.*.tsv.gz
+do
+	pre=`echo $f | sed 's/structural_somatic_mutation.//;s/.tsv.gz//'`
+	if [ ! -f KAT5.exp_array.$pre.tsv.gz.txt.specimen ] && [ ! -f KAT5.exp_seq.$pre.tsv.gz.txt.specimen ]
+	then
+		rm $f
+	else
+		gunzip -c $f | cut -f 2-3,7,23 | tail -n +2 | sed 's/ /./g' | sort | uniq -c | awk -v OFS="\t" '{print $2,$3,$4,$5,$1}' >> sv.byspeciman.stats
+	fi
+done
+
+for f in KAT5.exp_*.tsv.gz.txt.specimen
+do
+	pre=`echo $f | sed 's/.tsv.gz.txt.specimen//'`
+	perl $myperl sv.byspeciman.stats $f 1 1 | grep -v "/" | cut -f 1-5,8,10 > exp.sv.$pre.tsv
+done
+
+for f in `ll exp.sv.KAT5.exp_* | awk '$5 > 100{print $9}'`
+do
+	Rscript $rscatterplot $f
+done
+
+###########
+# cd /home1/04935/shaojf/stampede2/TIP60.KAT5/cnv
+# ln -s ../exprs/KAT5.exp_*tsv.gz.txt.specimen .
+echo "cancers specimens cnvtypes seqtypes counts" | tr " " "\t" > cnv.byspeciman.stats
+for f in copy_number_somatic_mutation.*.tsv.gz
+do
+	pre=`echo $f | sed 's/copy_number_somatic_mutation.//;s/.tsv.gz//'`
+	if [ ! -f KAT5.exp_array.$pre.tsv.gz.txt.specimen ] && [ ! -f KAT5.exp_seq.$pre.tsv.gz.txt.specimen ]
+	then
+		rm $f
+	else
+		gunzip -c $f | cut -f 2-3,8,20 | tail -n +2 | sed 's/ /./g' | sort | uniq -c | awk -v OFS="\t" '{print $2,$3,$4,$5,$1}' >> cnv.byspeciman.stats
+	fi
 done
