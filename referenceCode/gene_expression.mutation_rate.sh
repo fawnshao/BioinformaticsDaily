@@ -126,10 +126,13 @@ do
 done
 
 # ln -s ../exprs/KAT5.exp_*tsv.gz.txt.specimen.tumors.*.tsv .
-for f in KAT5.exp_*tsv.gz.txt.specimen.tumors.*.tsv
+# rm quantile.exp.mut.homer.KAT5.exp_*
+# rm *tsv.gz.txt.specimen.tumors.*er.tsv
+# ln -s ../exprs/KAT5.exp_*tsv.gz.txt.specimen.*.tumors.*er.tsv .
+for f in KAT5.exp_*tsv.gz.txt.specimen.*.tumors.*er.tsv
 do
 	pre=`echo $f | cut -f 1-3 -d "."`
-	class=`echo $f | cut -f 9 -d "."`
+	class=`echo $f | awk -F"." '{print $(NF-1)}'`
 	perl $myperl WGS.mut.byspeciman.stats <(sed 's/"//g' $f) 1 1 | grep -v "/" | cut -f 1-5,8,9 | awk -v var=$class '{print $0"\t"var}' >> quantile.exp.mut.homer.$pre.tsv
 done
 
@@ -183,10 +186,14 @@ do
 done
 
 # ln -s ../exprs/KAT5.exp_*tsv.gz.txt.specimen.tumors.*.tsv .
-for f in KAT5.exp_*tsv.gz.txt.specimen.tumors.*.tsv
+# rm quantile.*.homer.KAT5.exp_*
+# rm *tsv.gz.txt.specimen.tumors.*er.tsv
+# ln -s ../exprs/KAT5.exp_*tsv.gz.txt.specimen.*.tumors.*er.tsv .
+for f in KAT5.exp_*tsv.gz.txt.specimen.*.tumors.*er.tsv
 do
 	pre=`echo $f | cut -f 1-3 -d "."`
-	class=`echo $f | cut -f 9 -d "."`
+	# class=`echo $f | cut -f 9 -d "."`
+	class=`echo $f | awk -F"." '{print $(NF-1)}'`
 	perl $myperl sv.homer.byspeciman.stats <(sed 's/"//g' $f) 1 1 | grep -v "/" | cut -f 1-5,8,9 | awk -v var=$class '{print $0"\t"var}' >> quantile.sv.homer.$pre.tsv
 done
 
@@ -194,6 +201,12 @@ for f in `wc -l quantile.sv.homer.KAT5.exp_*.tsv | awk '$1 > 100 && $2!="total"{
 do
 	Rscript $rquantileboxplot $f
 done
+
+for f in `wc -l quantile.sv.homer.KAT5.exp_*.tsv | awk '$1 > 100 && $2!="total"{print $2}'`
+do
+	Rscript $rquantileviolin $f
+done
+
 
 ###########
 # cd /home1/04935/shaojf/stampede2/TIP60.KAT5/cnv
@@ -253,10 +266,14 @@ done
 
 
 # ln -s ../exprs/KAT5.exp_*tsv.gz.txt.specimen.tumors.*.tsv .
-for f in KAT5.exp_*tsv.gz.txt.specimen.tumors.*.tsv
+# rm quantile.*.homer.KAT5.exp_*
+# rm *tsv.gz.txt.specimen.tumors.*er.tsv
+# ln -s ../exprs/KAT5.exp_*tsv.gz.txt.specimen.*.tumors.*er.tsv .
+for f in KAT5.exp_*tsv.gz.txt.specimen.*.tumors.*er.tsv
 do
 	pre=`echo $f | cut -f 1-3 -d "."`
-	class=`echo $f | cut -f 9 -d "."`
+	# class=`echo $f | cut -f 9 -d "."`
+	class=`echo $f | awk -F"." '{print $(NF-1)}'`
 	perl $myperl WGS.cnv.homer.byspeciman.stats <(sed 's/"//g' $f) 1 1 | grep -v "/" | cut -f 1-5,8,9 | awk -v var=$class '{print $0"\t"var}' >> quantile.WGS.cnv.homer.$pre.tsv
 	perl $myperl non-NGS.cnv.homer.byspeciman.stats <(sed 's/"//g' $f) 1 1 | grep -v "/" | cut -f 1-5,8,9 | awk -v var=$class '{print $0"\t"var}' >> quantile.non-NGS.cnv.homer.$pre.tsv
 done
@@ -266,4 +283,39 @@ do
 	Rscript $rquantileboxplot $f
 done
 
+for f in `wc -l quantile.*cnv.homer.KAT5.exp_*.tsv | awk '$1 > 100 && $2!="total"{print $2}'`
+do
+	Rscript $rquantileviolin $f
+done
 
+##########################################################
+# cd /home1/04935/shaojf/stampede2/TIP60.KAT5/lianghan.enhancers
+ln -s ../muts/simple_somatic_mutation.open.*.bed .
+ln -s ../exprs/KAT5.exp_*.tsv.gz.txt.specimen.*.tumors.*er.tsv .
+
+for pre in `ls KAT5.exp_* | cut -f 3 -d"." | sort | uniq`
+do
+	f=simple_somatic_mutation.open.$pre.tsv.gz.srt.bed
+	bedtools intersect -wo -a <(awk '{print "chr"$0}' $f) -b lianghan.2018cell.enhancer.bed > lianghan.2018cell.enhancer.$pre &
+done
+
+echo "cancers specimens regions counts" | tr " " "\t" > lianghan.2018cell.enhancer.byspeciman.stats
+for f in lianghan.2018cell.enhancer.*-*
+do
+	pre=`echo $f | sed 's/lianghan.2018cell.enhancer.//'`
+	cut -f 4 $f | cut -f1 -d"|" | sort | uniq -c | awk -v var=$pre -vOFS="\t" '{printf "%s\t%s\t%s\t%d\n", var,$2,"enhancer",$1}' >> lianghan.2018cell.enhancer.byspeciman.stats
+done
+
+
+for f in KAT5.exp_*tsv.gz.txt.specimen.*.tumors.*er.tsv
+do
+	pre=`echo $f | cut -f 1-3 -d "."`
+	class=`echo $f | awk -F"." '{print $(NF-1)}'`
+	perl $myperl WGS.cnv.homer.byspeciman.stats <(sed 's/"//g' $f) 1 1 | grep -v "/" | cut -f 1-5,8,9 | awk -v var=$class '{print $0"\t"var}' >> quantile.WGS.cnv.homer.$pre.tsv
+	perl $myperl non-NGS.cnv.homer.byspeciman.stats <(sed 's/"//g' $f) 1 1 | grep -v "/" | cut -f 1-5,8,9 | awk -v var=$class '{print $0"\t"var}' >> quantile.non-NGS.cnv.homer.$pre.tsv
+done
+
+for f in `wc -l quantile.*cnv.homer.KAT5.exp_*.tsv | awk '$1 > 100 && $2!="total"{print $2}'`
+do
+	Rscript $rquantileboxplot $f
+done

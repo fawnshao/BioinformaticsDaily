@@ -5,7 +5,7 @@ datax <- fread(args[1], sep = "\t", header = F)
 colnames(datax) <- c("cancers", "samples", "genes", "NormalizedValues", "types", 
 	"MutRegions", "MutCounts", "ExpressionQuantile")
 
-targets <- c("exon", "intron", "Intergenic", "promoter-TSS")
+targets <- c("exon", "intron", "Intergenic", "promoter-TSS", "enhancer")
 for(i in 1:length(targets)){
 	datay <- datax[MutRegions == targets[i],]
 	if(nrow(datay) > 10){

@@ -16,8 +16,12 @@ print(myplot)
 dev.off()
 
 tumors <- datax[!grep("Normal", types),]
-tumors.upper <- tumors[ NormalizedValues > quantile(NormalizedValues, probs = 0.8),]
-tumors.lower <- tumors[ NormalizedValues < quantile(NormalizedValues, probs = 0.2),]
+groups <- unique(datax$genes)
+for(i in 1:length(groups)){
+	a <- tumors[ genes == groups[i] ]
+	tumors.upper <- a[ NormalizedValues > quantile(NormalizedValues, probs = 0.8),]
+	tumors.lower <- a[ NormalizedValues < quantile(NormalizedValues, probs = 0.2),]
 
-write.table(tumors.upper, row.names = F, file = paste(args[1], "tumors.upper", "tsv", sep = "."), sep = "\t")
-write.table(tumors.lower, row.names = F, file = paste(args[1], "tumors.lower", "tsv", sep = "."), sep = "\t")
+	write.table(tumors.upper, row.names = F, file = paste(args[1], groups[i], "tumors.upper", "tsv", sep = "."), sep = "\t")
+	write.table(tumors.lower, row.names = F, file = paste(args[1], groups[i], "tumors.lower", "tsv", sep = "."), sep = "\t")
+}
