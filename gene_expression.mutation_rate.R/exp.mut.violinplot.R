@@ -14,7 +14,7 @@ for(i in 1:length(targets)){
 		myplot <- ggplot(data = datay, aes(x = genes, y = MutCounts, fill = ExpressionQuantile)) + 
 			geom_violin(position = position_dodge(1)) +
 			# geom_jitter(position = position_dodge(1)) +
-			geom_jitter(position = position_jitterdodge()) + 
+			geom_jitter(position = position_jitterdodge(jitter.width = 0.3, dodge.width = 0.3)) + 
 			scale_y_continuous(limits = c(ymin, ymax)) +
 			labs(title = paste(args[1], targets[i], sep = " "), caption = date()) + 
 			theme(axis.text.x = element_text(angle = 60, hjust = 1))
