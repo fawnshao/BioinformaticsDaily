@@ -14,7 +14,7 @@ rownames(annosR) <- rownames(scores)
 annosR[Type == "hkg1" | Type == "hkg2" | Type == "hkg3" | Type == "hkg4"] <- "HKG"
 annosR[Type != "HKG" & Type != "mixTSG"] <- "singleTSG"
 colors <- colorRampPalette(c("blue", "white", "red"))(100)
-scores[!is.na(scores) & scores > 15] <- 15
+scores[!is.na(scores) & scores > 20] <- 20
 png(filename = paste(args[1], "pheatmap.png", sep = "."), width = 1500, height = 1200)
 myplot <- pheatmap(scores, scale = "none", annotation_row = annosR, annotation_col = annosC,
 	show_rownames = F, show_colnames = F, color = colors, 
