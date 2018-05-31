@@ -5,7 +5,7 @@ args <- commandArgs(TRUE)
 input <- fread(args[1], sep = "\t", header = T, na.strings = "NA")
 class <- fread(args[2], sep = "\t", header = T)
 scores <- data.matrix(input[,-c(1:3)])
-rownames(scores) <- as.matrix(input[,1])
+rownames(scores) <- 1:nrow(scores) # as.matrix(input[,1])
 colnames(scores) <- 1:ncol(scores)
 annosC <- class[,2]
 annosR <- input[,2]
