@@ -11,6 +11,8 @@ scores.right <- scores[,(count + 1):ncol(scores)]
 mean.left <- apply(scores.left, 1, function(x) {mean(x, na.rm = T)})
 mean.right <- apply(scores.right, 1, function(x) {mean(x, na.rm = T)})
 mean.fc <- mean.left - mean.right
+# last <- scores[abs(mean.fc) > 1,]
+# data.frame(rownames(last), last)
 write.table(scores[abs(mean.fc) > 1,], file = paste(args[1],"fc1.tsv", sep = "."), sep = "\t")
 
 colors <- colorRampPalette(c("blue", "white", "red"))(100)
