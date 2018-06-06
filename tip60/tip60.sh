@@ -140,7 +140,7 @@ do
 done
 
 rscatterplot=/home1/04935/shaojf/myTools/BioinformaticsDaily/tip60/scatter.plot.R
-for f in `wc -l exp_*.DBS.*.tsv | awk '$1>0{print $2}'`
+for f in `wc -l exp_*.DBS.*.tsv | awk '$1>0{print $2}' | grep -v "total"`
 do
 	Rscript $rscatterplot $f
 done
