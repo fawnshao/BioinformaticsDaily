@@ -139,10 +139,11 @@ do
 	fi
 done
 
-rscatterplot=/home1/04935/shaojf/myTools/BioinformaticsDaily/gene_expression.mutation_rate.R/exp.mut.scatter.plot.R
-
-Rscript $rscatterplot $f
-
+rscatterplot=/home1/04935/shaojf/myTools/BioinformaticsDaily/tip60/scatter.plot.R
+for f in `wc -l exp_*.DBS.*.tsv | awk '$1>0{print $2}'`
+do
+	Rscript $rscatterplot $f
+done
 
 
 for f in copy_number_somatic_mutation.*.tsv.gz
