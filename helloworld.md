@@ -109,4 +109,43 @@ cut -f 3 hkg.tsg.srtbyPCA.enhanceratlas.ep.hkggt20.stat | sort | uniq | sed 's/:
 
 cut -f 3 hkg.tsg.srtbyPCA.enhanceratlas.ep.hkglt2.stat | sort | uniq | sed 's/:/\t/;s/-/\t/' | awk '{print $0"\t"NR}' > hkg.tsg.srtbyPCA.enhanceratlas.ep.hkglt2.enhancer.bed
 
+# rclone sync /home1/04935/shaojf/stampede2/housekeeping_genes/both.pc.and.nc.genes/PSYCHIC/ mygoogle:hkg_tsg/both.pc.and.nc.genes/PSYCHIC/
+myperl=/home1/04935/shaojf/myTools/BioinformaticsDaily/textProcess/add_any_2files_together.pl
+for f in *.bed
+do
+    pre=`echo $f | sed 's/.bed//'`
+    perl $myperl <(sed 's/:/\t/' $f) <(tail -n +2 hkg.tsg.srtbyPCA.class | sed 's/|/\t/') 3 1 | cut -f 1-6 | sed 's/\t/|/' > hkg.tsg.srtbyPCA.$pre
+done
 
+for f in *.bed
+do
+    pre=`echo $f | sed 's/.bed//'`
+    # awk -F"\t" '$3!="/"{print $2"\t"$3":"$4"-"$5}' hkg.tsg.srtbyPCA.$pre
+    awk -F"\t" '$2~/hkg/ && $3!="/"{print $1}' hkg.tsg.srtbyPCA.$pre | sort | uniq | wc -l
+done > hkg.stats
+
+for f in *.bed
+do
+    pre=`echo $f | sed 's/.bed//'`
+    cut -f 4 $f | cut -f 1 -d":" | sort | uniq | wc -l
+done > all.stats
+
+243
+366
+1089
+1044
+766
+906
+957
+409
+494
+
+2193
+2906
+8373
+8982
+6889
+8105
+7893
+4359
+6373
