@@ -16,8 +16,8 @@ scores[is.na(scores) | scores < 0] <- 0
 #####
 colors <- colorRampPalette(c("blue", "white", "red"))(100)
 scores[scores > 10] <- 10
-png(filename = paste(args[1], "pheatmap.png", sep = "."), width = 1500, height = 1200)
+png(filename = paste(args[1], "pheatmap.png", sep = "."), width = 1500, height = 1600)
 myplot <- pheatmap(scores, scale = "none", annotation_row = annosR,
-	show_rownames = F, show_colnames = F, color = colors, 
+	show_rownames = F, show_colnames = T, color = colors, 
 	cluster_cols = F, cluster_rows = F)
 dev.off()
