@@ -8,9 +8,9 @@ rownames(scores) <- 1:nrow(scores) # as.matrix(input[,1])
 annosR <- input[,-1]
 rownames(annosR) <- rownames(scores)
 #####
-annosR[grep("hkg", GTEx), 1] <- "HKG"
-annosR[grep("hkg", pancancer), 2] <- "HKG"
-annosR[grep(",", pancancer), 2] <- "mixTSG"
+annosR[grep("hkg", annosR$GTEx), 1] <- "HKG"
+annosR[grep("hkg", annosR$pancancer), 2] <- "HKG"
+annosR[grep(",", annosR$pancancer), 2] <- "mixTSG"
 scores[is.na(scores) | scores < 0] <- 0
 #####
 colors <- colorRampPalette(c("blue", "white", "red"))(100)
