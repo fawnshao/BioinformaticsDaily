@@ -22,3 +22,11 @@ myplot <- pheatmap(scores, scale = "none", annotation_row = annosR,
 	show_rownames = F, show_colnames = T, color = colors, 
 	cluster_cols = F, cluster_rows = F)
 dev.off()
+
+if(args[3] == "Y"){
+	png(filename = paste(args[1], "pheatmap.colcluster.png", sep = "."), width = 2500, height = 3000)
+	myplot <- pheatmap(scores, scale = "none", annotation_row = annosR,
+		show_rownames = F, show_colnames = T, color = colors, 
+		cluster_cols = T, cluster_rows = F)
+	dev.off()
+}
