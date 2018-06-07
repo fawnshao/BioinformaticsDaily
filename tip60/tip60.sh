@@ -81,6 +81,29 @@ grep -n "Skin" KAT5.del.amp.samples.2 | cut -f 1 -d":" | tr "\n" "," | sed 's/,$
 # dev.off()
 ######
 
+############
+# cd /home1/04935/shaojf/stampede2/TIP60.KAT5/PANCAN/cutoff.1
+paste KAT5.del.amp.samples <(grep "ENSG00000172977.12" KAT5.del.amp.tpm.srt | tr "\t" "\n") > KAT5.del.amp.KAT5.tpm.srt
+
+############
+# library(data.table)
+# library(ggplot2)
+# args <- c("KAT5.del.amp.KAT5.tpm.srt")
+# datax <- fread(args[1], sep = "\t", header = T)
+# colnames(datax) <- c("samples", "types", "NormalizedValues")
+
+# ymax <- quantile(datax$NormalizedValues, probs = 0.95)
+# myplot <- ggplot(data = datax, aes(x = types, y = NormalizedValues, fill = types)) + 
+# 	geom_boxplot(position = position_dodge(1), outlier.alpha = 0.1, outlier.size = 0.1) + 
+# 	scale_y_continuous(limits = c(0, ymax)) +
+# 	labs(title = args[1], caption = date()) + 
+# 	theme(legend.position = "none", axis.text.x = element_text(angle = 60, hjust = 1))
+# png(filename = paste(args[1], "boxplot.png", sep = "."), width = 400, height = 600)
+# print(myplot)
+# dev.off()
+############
+
+
 ############# for DSB
 # cd /home1/04935/shaojf/stampede2/TIP60.KAT5/sv
 for f in structural_somatic_mutation.*.tsv.gz
@@ -158,3 +181,41 @@ do
 done
 
 
+############# for mutation
+# cd /home1/04935/shaojf/stampede2/TIP60.KAT5/muts
+# for pre in `cut -f1 ICGC.tissues`
+# do
+# 	tissues=`grep -w $pre ICGC.tissues | awk '{print $2}'`
+# 	grep -i -e $tissues fantom.enhancer.tissues.txt | cut -f 1 | tr "\n" "," | sed 's/,$//' | xargs -I mycol cut -f 1,mycol human_permissive_enhancers_phase_1_and_2_expression_tpm_matrix.txt | awk '{sum=0;for(i=2;i<=NF;i++){sum+=$i}if(sum>0){print $1"\t"$1}}' | sed 's/:/\t/;s/-/\t/' > $pre.active.enhancer.bed
+# done
+
+for f in *.active.enhancer.bed
+do
+	pre=`echo $f | cut -f1 -d"."`
+	bedtools intersect -wo -a <(awk '{print "chr"$0}' simple_somatic_mutation.open.$pre.tsv.gz.srt.bed) -b <(awk -vOFS="\t" '{print $1,$2-5000,$3+5000,$4}' $f) > mut.enhancer.$pre
+done
+
+for f in mut.enhancer.*
+do
+	pre=`echo $f | cut -f3 -d"."`
+	cut -f 4 $f | cut -f 1 -d"|" | sort | uniq -c | awk '{print $2"\t"$1}' > mut.enhancer.$pre.stats
+done
+
+for f in mut.enhancer.*.stats
+do
+	pre=`echo $f | cut -f 3 -d"."`
+	if [ -f KAT5.exp_array.$pre.tsv.gz.txt.specimen ]
+	then
+		perl $myperl $f KAT5.exp_array.$pre.tsv.gz.txt.specimen 0 1 | grep -v "/" | cut -f 1-5,7 > exp_array.mut.$pre.tsv
+	fi
+	if [ -f KAT5.exp_seq.$pre.tsv.gz.txt.specimen ]
+	then
+		perl $myperl $f KAT5.exp_seq.$pre.tsv.gz.txt.specimen 0 1 | grep -v "/" | cut -f 1-5,7 > exp_seq.mut.$pre.tsv
+	fi
+done
+
+rscatterplot=/home1/04935/shaojf/myTools/BioinformaticsDaily/tip60/scatter.plot.R
+for f in `wc -l exp_*.mut.*.tsv | awk '$1>0{print $2}' | grep -v "total"`
+do
+	Rscript $rscatterplot $f
+done
