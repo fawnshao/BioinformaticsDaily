@@ -1,11 +1,12 @@
 library(data.table)
 library(pheatmap)
 args <- commandArgs(TRUE)
+# args <- c("srt.sim.v1.5.log2tpm.median.tsv", "srt.sim.hkg.tsg.annotation.2")
 input <- fread(args[1], sep = "\t", header = T, na.strings = "NA")
 class <- fread(args[2], sep = "\t", header = T, na.strings = "NA")
 scores <- data.matrix(input[,-1])
 rownames(scores) <- 1:nrow(scores) # as.matrix(input[,1])
-annosR <- input[,-1]
+annosR <- class[,-1]
 rownames(annosR) <- rownames(scores)
 #####
 # annosR[grep("hkg", annosR$GTEx), 1] <- "HKG"
