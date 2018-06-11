@@ -219,3 +219,12 @@ for f in `wc -l exp_*.mut.*.tsv | awk '$1>0{print $2}' | grep -v "total"`
 do
 	Rscript $rscatterplot $f
 done
+
+
+
+############ cosmic
+/home1/04935/shaojf/stampede2/mutations/COSMIC/rawData/cosmic.v85
+gunzip -c CosmicBreakpointsExport.tsv.gz | tail -n +2 | awk -vOFS="\t" -F"\t" '{print $16,$17-1,$18,$2"\n"$20,$21-1,$22,$2}' > CosmicBreakpoints.bed
+gunzip -c CosmicCompleteCNA.tsv.gz | awk -F"\t" '{print $20"\t"$4}' | sed 's/:/\t/;s/\.\./\t/' | tail -n +2 > CosmicCompleteCNA.bed
+gunzip -c CosmicNCV.tsv.gz | awk -F"\t" '$24=="y"{print $15"\t"$2}' | sed 's/:/\t/;s/-/\t/' | awk -vOFS="\t" '{print $1,$2-1,$3,$4}' > CosmicNCV.WGS.bed
+gunzip -c CosmicCompleteGeneExpression.tsv.gz | awk '$3=="KAT5"' > Cosmic.KAT5.Expression.tsv
