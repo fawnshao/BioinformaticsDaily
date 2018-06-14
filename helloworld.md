@@ -130,3 +130,10 @@ do
     cut -f 4 $f | cut -f 1 -d":" | sort | uniq | wc -l
 done > all.stats
 
+
+for f in *.bed
+do
+    pre=`echo $f | sed 's/.enh_1e-4.bed//'`
+    awk -F":" '{print $1}' $f | awk -vvar=$pre '{print $4"%"$1":"$2"-"$3"\t"var"\t1"}' >> tmp.enh_1e-4.bed
+done
+perl ~/myTools/BioinformaticsDaily/textProcess/make_matrixwith3col_from_single_file.pl tmp.enh_1e-4.bed > PSYCHIC.enh_1e-4.mat

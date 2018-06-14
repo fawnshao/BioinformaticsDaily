@@ -19,7 +19,7 @@ foreach $c(sort keys %collist){
 	}
 print "\n";
 
-foreach $r(keys %rowlist){
+foreach $r(sort keys %rowlist){
 	print "$r";
 	foreach $c(sort keys %collist){
 		$id = $r.":".$c;
