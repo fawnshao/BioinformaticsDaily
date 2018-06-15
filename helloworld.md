@@ -137,3 +137,22 @@ do
     awk -F":" '{print $1}' $f | awk -vvar=$pre '{print $4"%"$1":"$2"-"$3"\t"var"\t1"}' >> tmp.enh_1e-4.bed
 done
 perl ~/myTools/BioinformaticsDaily/textProcess/make_matrixwith3col_from_single_file.pl tmp.enh_1e-4.bed > PSYCHIC.enh_1e-4.mat
+
+tail -n +2 PSYCHIC.enh_1e-4.mat | awk '{sum=0;for(i=2;i<=NF;i++){sum+=$i}print $1"\t"sum}' > PSYCHIC.enh_1e-4.mat.stats
+awk '$2==9' PSYCHIC.enh_1e-4.mat.stats
+
+perl $myperl <(tail -n +2 hkg.tsg.srtbyPCA.class | sed 's/|/\t/') <(sed 's/%/\t/' PSYCHIC.enh_1e-4.mat.stats) 1 0 | sed 's/\t/%/' | cut -f 1-5 > PSYCHIC.enh_1e-4.mat.stats.hkg.tsg
+awk '$2>5' PSYCHIC.enh_1e-4.mat.stats.hkg.tsg
+grep -v "/" PSYCHIC.enh_1e-4.mat.stats.hkg.tsg
+awk '$NF~/hkg/' PSYCHIC.enh_1e-4.mat.stats.hkg.tsg
+sort -k2nr PSYCHIC.enh_1e-4.mat.stats.hkg.tsg
+
+for f in *.bed
+do
+    pre=`echo $f | sed 's/.enh_1e-2.bed//'`
+    awk -F":" '{print $1}' $f | awk -vvar=$pre '{print $4"%"$1":"$2"-"$3"\t"var"\t1"}' >> tmp.enh_1e-2.bed
+done
+perl ~/myTools/BioinformaticsDaily/textProcess/make_matrixwith3col_from_single_file.pl tmp.enh_1e-2.bed > PSYCHIC.enh_1e-2.mat
+
+tail -n +2 PSYCHIC.enh_1e-2.mat | awk '{sum=0;for(i=2;i<=NF;i++){sum+=$i}print $1"\t"sum}' > PSYCHIC.enh_1e-2.mat.stats
+awk '$2==9' PSYCHIC.enh_1e-2.mat.stats
