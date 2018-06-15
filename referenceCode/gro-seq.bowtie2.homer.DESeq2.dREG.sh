@@ -37,7 +37,7 @@ mkdir $dreg_dir
 for fastq in `ls $fastq_dir`
 do
 	name=`echo $fastq | awk -F"/" '{print $NF}' | cut -d "." -f 1`
-	cutadapt --nextseq-trim=20 -a polyA=AAAAAAAAAAAAAAAAAAA -a truseq=GATCGGAAGAGCACACGTCTGAACTCCAGTCAC -a truseqrev=GTGACTGGAGTTCAGACGTGTGCTCTTCCGATC -m 18 -e 0.10 -o ${clean_dir}/${name}.clean.fastq.gz ${fastq_dir}/$fastq &
+	cutadapt --nextseq-trim=20 -a polyA=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA -a truseq=GATCGGAAGAGCACACGTCTGAACTCCAGTCAC -a truseqrev=GTGACTGGAGTTCAGACGTGTGCTCTTCCGATC -m 18 -e 0.10 -o ${clean_dir}/${name}.clean.fastq.gz ${fastq_dir}/$fastq 1> ${clean_dir}/$name.log 2>&1 &
 done
 wait
 
