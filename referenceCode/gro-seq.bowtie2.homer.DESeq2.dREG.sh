@@ -37,7 +37,13 @@ mkdir $dreg_dir
 for fastq in `ls $fastq_dir`
 do
 	name=`echo $fastq | awk -F"/" '{print $NF}' | cut -d "." -f 1`
-	cutadapt --nextseq-trim=20 -a polyA=AAAAAAAAAAAAAAAAAAA -a truseq=GATCGGAAGAGCACACGTCTGAACTCCAGTCAC -a truseqrev=GTGACTGGAGTTCAGACGTGTGCTCTTCCGATC -m 18 -e 0.10 -o ${clean_dir}/${name}.clean.fastq.gz ${fastq_dir}/$fastq
+	cutadapt --nextseq-trim=20 -a polyA=AAAAAAAAAAAAAAAAAAA -a truseq=GATCGGAAGAGCACACGTCTGAACTCCAGTCAC -a truseqrev=GTGACTGGAGTTCAGACGTGTGCTCTTCCGATC -m 18 -e 0.10 -o ${clean_dir}/${name}.clean.fastq.gz ${fastq_dir}/$fastq &
+done
+wait
+
+for fastq in `ls $fastq_dir`
+do
+	name=`echo $fastq | awk -F"/" '{print $NF}' | cut -d "." -f 1`
 	bowtie2 -5 3 -3 1 -p 68 -x $HG19 -U ${clean_dir}/${name}.clean.fastq.gz -S $mapping_dir/${name}.sam
 	samtools view -q 10 -@ 68 $mapping_dir/${name}.sam | samtools sort -@ 68 -o $mapping_dir/${name}.sorted.bam
 	makeTagDirectory $homer_dir/${name}.mTD -tbp 3 -fragLength 200 $mapping_dir/${name}.sorted.bam
