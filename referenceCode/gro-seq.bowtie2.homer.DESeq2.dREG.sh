@@ -45,28 +45,31 @@ for fastq in `ls $fastq_dir`
 do
 	name=`echo $fastq | awk -F"/" '{print $NF}' | cut -d "." -f 1`
 	bowtie2 -5 3 -3 1 -p 68 -x $HG19 -U ${clean_dir}/${name}.clean.fastq.gz -S $mapping_dir/${name}.sam
-	samtools view -q 10 -@ 68 $mapping_dir/${name}.sam | samtools sort -@ 68 -o $mapping_dir/${name}.sorted.bam
+	samtools view -1 -q 10 -@ 68 $mapping_dir/${name}.sam | samtools sort -@ 68 -o $mapping_dir/${name}.sorted.bam
 	makeTagDirectory $homer_dir/${name}.mTD -tbp 3 -fragLength 200 $mapping_dir/${name}.sorted.bam
 done
-makeMultiWigHub.pl expname hg19 -url $url -webdir $visdir -d $homer_dir/*.mTD -force -strand &
+makeMultiWigHub.pl $expname hg19 -url $url -webdir $visdir -d $homer_dir/*.mTD -force -strand &
 #############################################
 
 #############################################
 ## Write out the bigWigs for dREG.
 echo " "
 echo "Writing bigWigs:"
-for f in $mapping_dir/${name}.sorted.bam
+for f in $mapping_dir/*.sorted.bam
 do
 	j=`echo $f | awk -F"/" '{print $NF}' | cut -d "." -f 1`
 	echo $j
+	samtools markdup -r -@ 68 $f $mapping_dir/${j}.sorted.rmdup.bam
 
-	bedtools bamtobed -i $f | awk 'BEGIN{OFS="\t"} ($5 > 0){print $0}' | awk 'BEGIN{OFS="\t"} ($6 == "+") {print $1,$2,$2+1,$4,$5,$6}; ($6 == "-") {print $1,$3-1,$3,$4,$5,$6}' | gzip > ${dreg_dir}/$j.bed.gz
-	echo 'Number of mappable reads:'
-	echo `zcat ${dreg_dir}/$j.bed.gz | grep "" -c`
+	# for dREG, we should do the following (bamtobed, and then to bedGraph), otherwise, erorr "Every read might be mapped to a region, not a locus." will be reported.
+	# bedtools bamtobed -i $f | awk 'BEGIN{OFS="\t"} ($5 > 0){print $0}' | awk 'BEGIN{OFS="\t"} ($6 == "+") {print $1,$2,$2+1,$4,$5,$6}; ($6 == "-") {print $1,$3-1,$3,$4,$5,$6}' | gzip > ${dreg_dir}/$j.bed.gz
+	# echo 'Number of mappable reads:'
+	# echo `zcat ${dreg_dir}/$j.bed.gz | grep "" -c`
 
 	## Convert to bedGraph ... Can't gzip these, unfortunately.
-	bedtools genomecov -bg -i ${dreg_dir}/$j.bed.gz -g $genomesize -strand + > ${dreg_dir}/${j}_plus.bedGraph &
-	bedtools genomecov -bg -i ${dreg_dir}/$j.bed.gz -g $genomesize -strand - > ${dreg_dir}/${j}_minus.noinv.bedGraph &
+	# -fs 200
+	bedtools genomecov -bg -ibam $mapping_dir/${j}.sorted.rmdup.bam -g $genomesize -strand + -fs 200 > ${dreg_dir}/${j}_plus.bedGraph & 
+	bedtools genomecov -bg -ibam $mapping_dir/${j}.sorted.rmdup.bam -g $genomesize -strand - -fs 200 > ${dreg_dir}/${j}_minus.noinv.bedGraph &
 	wait
 
 	## Invert minus strand.
@@ -82,7 +85,8 @@ do
 	bedGraphToBigWig ${dreg_dir}/${j}_minus.sorted.bedGraph $genomesize ${dreg_dir}/${j}_minus.bw &
 	wait
 
-	rm ${dreg_dir}/$j.bed.gz ${dreg_dir}/$j*.bedGraph
+	# rm ${dreg_dir}/$j.bed.gz ${dreg_dir}/${j}*.bedGraph
+	rm ${dreg_dir}/${j}*.bedGraph
  done
 #############################################
 
@@ -90,7 +94,7 @@ do
 #############################################
 # dREG
 dregmodel=/home1/04935/shaojf/myTools/dREG/dREG-Model/asvm.gdm.6.6M.20170828.rdata
-for gro in `ls ${dreg_dir}/${j}_plus.bw | awk -F"/" '{print $NF}' | cut -f 1 -d "."`
+for gro in `ls ${dreg_dir}/*_plus.bw | awk -F"/" '{print $NF}' | sed 's/_plus.bw//'`
 do
 	negbw=${dreg_dir}/${gro}_minus.bw
 	posbw=${dreg_dir}/${gro}_plus.bw
