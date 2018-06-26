@@ -48,6 +48,7 @@ do
 	BWADir=$OutDir'/Alignment_MAPQ'$MAPQ_Thr
 	SegDir=$OutDir'/Segments_HiChIP'
 	mkdir -p $BWADir
+	mkdir -p $SegDir
 	BWA_R1_Alignfile=$BWADir/bwa_out_R1_Chimeric.sam
 	BWA_R2_Alignfile=$BWADir/bwa_out_R2_Chimeric.sam
 	PairedFilteredReadFile=$BWADir/$PREFIX.paired.cis.RE.filtered.bam
