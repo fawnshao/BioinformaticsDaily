@@ -11,6 +11,10 @@
 # salmon index -p 68 --gencode -t gencode.v19.ERCC.fa -i gencode.v19.ERCC_quasi_index 
 # awk '$3=="transcript"{print $12"\t"$10}' gencode.v19.annotation.gtf | sed 's/"//g;s/;//g' | awk 'BEGIN{print "TXNAME\tGENEID";}{print $0}' > tx2gene.gencode.v19.tsv
 
+#### about ERCC normalization
+# RUVseq paper https://www.nature.com/articles/nbt.2931
+# DESeq2 author Simon Anders comment: https://support.bioconductor.org/p/88413/
+
 salmonIndex=/home1/04935/shaojf/scratch/Salmon.index/gencode.v19.ERCC_quasi_index
 gtf=/home1/04935/shaojf/scratch/Salmon.index/gencode.v19.annotation.gtf
 workDir=/home1/04935/shaojf/scratch/YY1.mut.RNAseq
@@ -36,4 +40,5 @@ do
 	echo "$pre $salmonDIR/$pre.salmon/quant.sf" >> $workDir/tximport.samples.txt
 done
 
-Rscript 
+Rscript /home1/04935/shaojf/myTools/BioinformaticsDaily/referenceCode/salmon.tximport.RUV.ERCC.R $workDir/tximport.samples.txt YY1del
+
