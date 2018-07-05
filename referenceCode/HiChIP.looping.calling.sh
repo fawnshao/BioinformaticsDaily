@@ -78,10 +78,11 @@
 # Restriction site(s) GATC
 # /home1/04935/shaojf/myTools/HiChIP/HiC-Pro/annotation/hg19.MboI.bed
 
+# /home1/04935/shaojf/scratch/HiChIP.test/map.res/GM12878_cell_line.SRR5831489/FitHiChIP_Peak2ALL_b5000/Interaction_ALL
 
 
 export PATH=/home1/04935/shaojf/myTools/HiChIP/FitHiChIP/Preprocess:/home1/04935/shaojf/myTools/HiChIP/FitHiChIP/bin:/home1/04935/shaojf/myTools/HiChIP/FitHiChIP/scripts/BAM:/home1/04935/shaojf/myTools/HiChIP/FitHiChIP/scripts/PAIRIX:/home1/04935/shaojf/myTools/HiChIP/FitHiChIP:$PATH
-THREADS=68
+THREADS=200
 MAPQ_Thr=30
 GSIZE='hs'
 # default values of short and long read thresholds
@@ -100,6 +101,8 @@ mapDir=$workdir/map.res
 inputfiles=$workdir/raw.data/a
 mkdir -p $mapDir
 mkdir -p $fqDir
+ln -s /home1/04935/shaojf/myTools/HiChIP/hichipper/RestrictionFragmentFiles
+alias sort="/bin/sort -S 50% --parallel=$THREADS"
 
 while read line
 do
@@ -123,6 +126,8 @@ do
 	make --file /home1/04935/shaojf/bin/HiC-Pro_2.10.0/scripts/Makefile CONFIG_FILE=/home1/04935/shaojf/scratch/HiChIP.test/config-hicpro.txt CONFIG_SYS=/home1/04935/shaojf/bin/HiC-Pro_2.10.0/config-system.txt all_sub 2>&1
 	cd $HiCProOutputDir
 	make --file /home1/04935/shaojf/bin/HiC-Pro_2.10.0/scripts/Makefile CONFIG_FILE=/home1/04935/shaojf/scratch/HiChIP.test/config-hicpro.txt CONFIG_SYS=/home1/04935/shaojf/bin/HiC-Pro_2.10.0/config-system.txt all_persample 2>&1
+	cd $workdir
+	sleep 48h
 
 	# FitHiChIP pipeline
 	OutDir=$mapDir/$PREFIX
@@ -175,13 +180,16 @@ do
 	FitHiChIP.sh -C $PREFIX.config &
 
 	# hichipper needs hicpro_output
+	# cd $workdir
+	################ relative directory
 	echo "peaks:" > hichipper.$PREFIX.yaml
 	# echo "  - $macs2dir/$PREFIX.anchors.bed" >> hichipper.$PREFIX.yaml
-	echo "  - $macs2dir/${PREFIX}_peaks.narrowPeak" >> hichipper.$PREFIX.yaml
+	# echo "  - $macs2dir/${PREFIX}_peaks.narrowPeak" >> hichipper.$PREFIX.yaml
+	echo "  - map.res/$PREFIX/PeaksAnchors_CompleteAlignment_Fastq_Latest/${PREFIX}_peaks.narrowPeak" >> hichipper.$PREFIX.yaml
 	echo "resfrags:" >> hichipper.$PREFIX.yaml
-	echo "  - /home1/04935/shaojf/myTools/HiChIP/hichipper/RestrictionFragmentFiles/hg19_MboI_resfrag.bed.gz" >> hichipper.$PREFIX.yaml
+	echo "  - RestrictionFragmentFiles/hg19_MboI_resfrag.bed.gz" >> hichipper.$PREFIX.yaml
 	echo "hicpro_output:" >> hichipper.$PREFIX.yaml
-	echo "  - $HiCProOutputDir" >> hichipper.$PREFIX.yaml
+	echo "  - HiCPro.output/$sra" >> hichipper.$PREFIX.yaml
 	hichipper --out hichipper.$PREFIX --read-length 76 hichipper.$PREFIX.yaml &
 done < $inputfiles
 wait

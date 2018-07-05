@@ -194,3 +194,50 @@ plotHeatmap -m Hela.ATAC_peaks.computeMatrix.gz -o Hela.ATAC_peaks.computeMatrix
 plotProfile -m Hela.ATAC_peaks.computeMatrix.gz -o Hela.ATAC_peaks.computeMatrix.plotProfile.pdf --kmeans 1 --plotFileFormat pdf --samplesLabel Hela-siCTL-rpt1-GROseq.mTDneg Hela-siCTL-rpt1-GROseq.mTDpos Hela-siCTL-rpt2-GROseq.mTDneg Hela-siCTL-rpt2-GROseq.mTDpos Hela-siCTL-rpt3-GROseq.mTDneg Hela-siCTL-rpt3-GROseq.mTDpos Hela-siP400-rpt1-GROseq.mTDneg Hela-siP400-rpt1-GROseq.mTDpos Hela-siP400-rpt2-GROseq.mTDneg Hela-siP400-rpt2-GROseq.mTDpos Hela-siP400-rpt3-GROseq.mTDneg Hela-siP400-rpt3-GROseq.mTDpos Hela-siTIP60-rpt1-GROseq.mTDneg Hela-siTIP60-rpt1-GROseq.mTDpos Hela-siTIP60-rpt2-GROseq.mTDneg Hela-siTIP60-rpt2-GROseq.mTDpos Hela-siTIP60-rpt3-GROseq.mTDneg Hela-siTIP60-rpt3-GROseq.mTDpos Hela-siCTL-ATAC Hela-siP400-ATAC Hela-siTIP60-ATAC --plotWidth 20 --plotHeight 10 --refPointLabel PeakCenter --plotType fill
 ####################################################################################
 
+####################################################################################
+# enhancer heatmap
+labs=`ls Hela-si*.ucsc.bigWig | sed 's/Hela-//g;s/.ucsc.bigWig//'`
+awk '$NF=="-"' hela.enhancer.bed > hela.enhancer.neg.bed
+awk '$NF=="+"' hela.enhancer.bed > hela.enhancer.pos.bed
+# for reg in hela.enhancer.neg.bed hela.enhancer.pos.bed
+for reg in hela.enhancer.bed
+do
+	pre=hela.enhancer.gro
+	computeMatrix reference-point -R $reg -S Hela-si*.ucsc.bigWig -out $pre.computeMatrix.gz --referencePoint center -b 3000 -a 3000 -bs 10 -p 48
+	plotHeatmap -m $pre.computeMatrix.gz -o $pre.plotHeatmap.pdf --kmeans 3 --colorMap Greens --whatToShow 'heatmap and colorbar' --plotFileFormat pdf --samplesLabel $labs --heatmapWidth 20 --refPointLabel EnhancerCenter &
+	plotProfile -m $pre.computeMatrix.gz -o $pre.plotProfile.pdf --kmeans 3 --plotFileFormat pdf --samplesLabel $labs --plotWidth 20 --plotHeight 10 --refPointLabel EnhancerCenter --numPlotsPerRow 2 &
+done
+wait
+####use feng bigwig files
+for reg in enhancer_siTIP60.bed genes_siTIP60.bed TSS_siTIP60.bed
+do
+	pre=hela.gro
+	labs=`ls Hela-si{CTL,TIP60}*.ucsc.bigWig | sed 's/Hela-//g;s/.ucsc.bigWig//g'`
+	computeMatrix reference-point -R Increase_$reg Decrease_$reg -S Hela-siCTL*.ucsc.bigWig Hela-siTIP60*.ucsc.bigWig -out $pre.$reg.computeMatrix.gz --regionBodyLength 5000 -b 3000 -a 3000 -bs 10 -p 48
+	plotHeatmap -m $pre.$reg.computeMatrix.gz -o $pre.$reg.plotHeatmap.pdf --colorMap Greens --whatToShow 'heatmap and colorbar' --plotFileFormat pdf --samplesLabel $labs --heatmapWidth 20 --regionsLabel Increase_$reg Decrease_$reg &
+	plotProfile -m $pre.$reg.computeMatrix.gz -o $pre.$reg.plotProfile.pdf --plotFileFormat pdf --samplesLabel $labs --plotWidth 20 --plotHeight 10 --numPlotsPerRow 2 --regionsLabel Increase_$reg Decrease_$reg &
+done
+wait
+
+
+for reg in *enhancer_siTIP60.bed *TSS_siTIP60.bed
+do
+	pre=hela.gro
+	labs=`ls Hela-si{CTL,TIP60}*.ucsc.bigWig | sed 's/Hela-//g;s/.ucsc.bigWig//g'`
+	computeMatrix reference-point -R $reg -S Hela-siCTL*.ucsc.bigWig Hela-siTIP60*.ucsc.bigWig -out $pre.$reg.computeMatrix.gz --referencePoint center -b 5000 -a 5000 -bs 100 -p 48
+	plotHeatmap -m $pre.$reg.computeMatrix.gz -o $pre.$reg.plotHeatmap.pdf --colorMap Greens --whatToShow 'heatmap and colorbar' --plotFileFormat pdf --samplesLabel $labs --heatmapWidth 20 &
+	plotProfile -m $pre.$reg.computeMatrix.gz -o $pre.$reg.plotProfile.pdf --plotFileFormat pdf --samplesLabel $labs --plotWidth 20 --plotHeight 10 &
+done
+for reg in *genes_siTIP60.bed
+do
+	pre=hela.gro
+	labs=`ls Hela-si{CTL,TIP60}*.ucsc.bigWig | sed 's/Hela-//g;s/.ucsc.bigWig//g'`
+	computeMatrix reference-point -R $reg -S Hela-siCTL*.ucsc.bigWig Hela-siTIP60*.ucsc.bigWig -out $pre.$reg.computeMatrix.gz --regionBodyLength 5000 -b 5000 -a 5000 -bs 100 -p 48
+	plotHeatmap -m $pre.$reg.computeMatrix.gz -o $pre.$reg.plotHeatmap.pdf --colorMap Greens --whatToShow 'heatmap and colorbar' --plotFileFormat pdf --samplesLabel $labs --heatmapWidth 20 &
+	plotProfile -m $pre.$reg.computeMatrix.gz -o $pre.$reg.plotProfile.pdf --plotFileFormat pdf --samplesLabel $labs --plotWidth 20 --plotHeight 10 --perGroup &
+done
+wait
+
+bedtools merge -d 5000 -i hela.enhancer.bed > merged.hela.enhancer.bed
+
+

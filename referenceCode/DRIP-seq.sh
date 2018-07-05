@@ -49,8 +49,8 @@ do
 done
 wait
 
-samtools view -1 -q 10 $pre.sam | samtools sort > $pre.sorted.bam
-samtools sort -n -o $pre.namesorted.bam $pre.sorted.bam
-samtools fixmate -m $pre.namesorted.bam $pre.fixmate.bam
-samtools sort -o $pre.possorted.bam $pre.fixmate.bam
-samtools markdup -r $pre.possorted.bam $pre.rmdup.bam
+# samtools view -@ 10 -bo $pre.q10.bam -1 -q 10 $pre.sam 
+# samtools sort -@ 10 -n -o $pre.namesorted.bam $pre.q10.bam
+# samtools fixmate -@ 10 -m $pre.namesorted.bam $pre.fixmate.bam
+# samtools sort -@ 10 -o $pre.possorted.bam $pre.fixmate.bam
+# samtools markdup -@ 10 -r $pre.possorted.bam $pre.rmdup.bam

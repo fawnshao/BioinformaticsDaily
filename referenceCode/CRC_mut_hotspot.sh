@@ -70,3 +70,65 @@ done
 # 		bigWigAverageOverBed $m $pre.flank.bed flank.$pre.$tail.tab &
 # 	done
 # done
+
+for f in bedtools.merge.WGS.*
+do
+	awk '$3-$2<100' $f > single.$f
+	awk '$3-$2>=100' $f > multip.$f
+done
+
+# WGS.mut/single.bedtools.merge.WGS.COAD-US  WGS.mut/single.bedtools.merge.WGS.COCA-CN
+# WGS.mut/multip.bedtools.merge.WGS.COAD-US  WGS.mut/multip.bedtools.merge.WGS.COCA-CN
+# for reg in WGS.mut/{single,multip}.bedtools.merge.WGS.CO*
+for reg in WGS.mut/multip.bedtools.merge.WGS.CO*
+do
+	pre=`echo $reg | awk -F"/" '{print $NF}' | awk -F"." '{print $NF}'`
+	for f in `ls bigwig.files/ | awk -F"." '{print $3}' | sort | uniq`
+	do
+		computeMatrix scale-regions \
+			-R $reg \
+			-S bigwig.files/*${f}*.bigwig \
+			-p 48 \
+			-b 1000 -a 1000 -bs 10 \
+			--regionBodyLength 1000 \
+			--skipZeros -o multip.$pre.${f}_scaled.gz \
+			--outFileNameMatrix multip.$pre.${f}_scaled.tab \
+			--outFileSortedRegions multip.$pre.${f}_genes.bed
+		labs=`ls bigwig.files/*${f}*.bigwig | awk -F"/" '{print $NF}' | awk -F"." '{print $2"."$3}' | tr "\n" " "`
+		plotHeatmap -m multip.$pre.${f}_scaled.gz \
+			-o multip.$pre.${f}_scaled.plotHeatmap.pdf \
+			--colorMap Greens --whatToShow 'heatmap and colorbar' \
+			--plotFileFormat pdf --samplesLabel $labs \
+			--heatmapWidth 10 \
+			--kmeans 3 \
+			--outFileSortedRegions multip.$pre.${f}.k3.sortedRegions.bed &
+	done	
+done
+for reg in WGS.mut/single.bedtools.merge.WGS.CO*
+do
+	pre=`echo $reg | awk -F"/" '{print $NF}' | awk -F"." '{print $NF}'`
+	for f in `ls bigwig.files/ | awk -F"." '{print $3}' | sort | uniq`
+	do
+		computeMatrix --referencePoint center \
+			-R $reg \
+			-S bigwig.files/*${f}*.bigwig \
+			-p 48 \
+			-b 1000 -a 1000 -bs 10 \
+			--skipZeros -o single.$pre.${f}_center.gz \
+			--outFileNameMatrix single.$pre.${f}_center.tab \
+			--outFileSortedRegions single.$pre.${f}_genes.bed
+		labs=`ls bigwig.files/*${f}*.bigwig | awk -F"/" '{print $NF}' | awk -F"." '{print $2"."$3}' | tr "\n" " "`
+		plotHeatmap -m single.$pre.${f}_center.gz \
+			-o single.$pre.${f}center.plotHeatmap.pdf \
+			--colorMap Greens --whatToShow 'heatmap and colorbar' \
+			--plotFileFormat pdf --samplesLabel $labs \
+			--heatmapWidth 10 \
+			--kmeans 3 \
+			--outFileSortedRegions single.$pre.${f}.k3.sortedRegions.bed &
+	done	
+done
+wait
+
+
+
+
