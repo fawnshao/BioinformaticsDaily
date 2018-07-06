@@ -23,12 +23,12 @@
 #
 #----------------------------------------------------
 
-#SBATCH -J myjob           # Job name
-#SBATCH -o myjob.out       # Name of stdout output file
-#SBATCH -e myjob.err       # Name of stderr error file
+#SBATCH -J hichipper       # Job name
+#SBATCH -o hichipper.out   # Name of stdout output file
+#SBATCH -e hichipper.err   # Name of stderr error file
 #SBATCH -p long            # Queue (partition) name
 #SBATCH -N 1               # Total # of nodes 
-#SBATCH -n 2               # Total # of mpi tasks
+#SBATCH -n 1               # Total # of mpi tasks
 #SBATCH -t 120:00:00       # Run time (hh:mm:ss)
 #SBATCH --mail-user=dreambetter@gmail.com
 #SBATCH --mail-type=all    # Send email at begin and end of job
@@ -115,7 +115,14 @@ do
 	PREFIX=$name"."$sra
 
 	# HiC-Pro pipeline
-	HiCProInputDir=$workdir/HiCPro.input
+	# HiC-Pro 2.10.0
+	# ---------------
+	# OPTIONS
+
+	#  -i|--input INPUT : input data folder; Must contains a folder per sample with input files
+	#  -o|--output OUTPUT : output folder
+	#  -c|--conf CONFIG : configuration file for Hi-C processing
+	HiCProInputDir=$workdir/HiCPro.input/$sra
 	HiCProOutputDir=$workdir/HiCPro.output/$sra
 	mkdir -p $HiCProInputDir/$sra
 	# mkdir -p $HiCProOutputDir/$sra
@@ -126,66 +133,13 @@ do
 	make --file /home1/04935/shaojf/bin/HiC-Pro_2.10.0/scripts/Makefile CONFIG_FILE=/home1/04935/shaojf/scratch/HiChIP.test/config-hicpro.txt CONFIG_SYS=/home1/04935/shaojf/bin/HiC-Pro_2.10.0/config-system.txt all_sub 2>&1
 	cd $HiCProOutputDir
 	make --file /home1/04935/shaojf/bin/HiC-Pro_2.10.0/scripts/Makefile CONFIG_FILE=/home1/04935/shaojf/scratch/HiChIP.test/config-hicpro.txt CONFIG_SYS=/home1/04935/shaojf/bin/HiC-Pro_2.10.0/config-system.txt all_persample 2>&1
-	cd $workdir
-	sleep 10h
-
-	# FitHiChIP pipeline
-	OutDir=$mapDir/$PREFIX
-	BWADir=$OutDir'/Alignment_MAPQ'$MAPQ_Thr
-	SegDir=$OutDir'/Segments_HiChIP'
-	mkdir -p $BWADir
-	mkdir -p $SegDir
-	BWA_R1_Alignfile=$BWADir/bwa_out_R1_Chimeric.sam
-	BWA_R2_Alignfile=$BWADir/bwa_out_R2_Chimeric.sam
-	PairedFilteredReadFile=$BWADir/$PREFIX.paired.cis.RE.filtered.bam
-	SortPrefix=$BWADir/$PREFIX.paired.cis.RE.filtered.sorted
-	rmDupFile=$BWADir/$PREFIX.paired.cis.RE.filtered.sorted.nodup.bam
-	ShortReadFile=$SegDir'/'$PREFIX'.cis.short.bam'
-	LongReadFile=$SegDir'/'$PREFIX'.cis.long.bam'
-	DumpedPairsSAMFile=$SegDir'/'$PREFIX'.cis.DumpedPairs.sam'
-	DumpedPairsBAMFile=$SegDir'/'$PREFIX'.cis.DumpedPairs.bam'
-	# bwa mem -t $THREADS $GENOME $FASTQ1 -o ${BWA_R1_Alignfile}.tmp.sam 2>$BWADir/$PREFIX.R1.bwa.log
-	# bwa mem -t $THREADS $GENOME $FASTQ2 -o ${BWA_R2_Alignfile}.tmp.sam 2>$BWADir/$PREFIX.R2.bwa.log
-	# chimeric.pl ${BWA_R1_Alignfile}.tmp.sam > $BWA_R1_Alignfile &
-	# chimeric.pl ${BWA_R2_Alignfile}.tmp.sam > $BWA_R2_Alignfile &
-	# wait
-	bwa mem -t $THREADS $GENOME $FASTQ1 2>$BWADir/$PREFIX.R1.bwa.log | chimeric.pl - > $BWA_R1_Alignfile
-	bwa mem -t $THREADS $GENOME $FASTQ2 2>$BWADir/$PREFIX.R2.bwa.log | chimeric.pl - > $BWA_R2_Alignfile
-	pair_up_filter_HiChIP.py -f $BWA_R1_Alignfile -r $BWA_R2_Alignfile -q $MAPQ_Thr -W $DumpedPairsSAMFile 2>$BWADir/$PREFIX.PairFilterlog | samtools view -@ $THREADS -S -h -L $CUT_ENZ - | samtools view -@ $THREADS -bhS - > $PairedFilteredReadFile
-	# pair_up_filter_HiChIP.py -f $BWA_R1_Alignfile -r $BWA_R2_Alignfile -q $MAPQ_Thr -W $DumpedPairsSAMFile 2>$BWADir/$PREFIX.PairFilterlog | samtools view -@ $THREADS -bhS - > $PairedFilteredReadFile
-	samtools sort -@ $THREADS -o $SortPrefix'.bam' $PairedFilteredReadFile
-	picard MarkDuplicates INPUT=$SortPrefix'.bam' OUTPUT=$rmDupFile ASSUME_SORTED=true REMOVE_DUPLICATES=true VALIDATION_STRINGENCY=LENIENT METRICS_FILE=$BWADir/$PREFIX.picard_metrics.txt
-	samtools index -@ $THREADS $rmDupFile
-	bam2pairs $rmDupFile $BWADir'/'$PREFIX'.paired.cis.RE'
-	samtools view -@ $THREADS -h $rmDupFile | awk -v dt="$ShortReadDistThr" 'function abs(v) {return v < 0 ? -v : v} { if(substr($1, 1, 1)=="@" || abs($9) < dt) print }' | samtools view -@ $THREADS -bhS - > $ShortReadFile
-	samtools index -@ $THREADS $ShortReadFile &
-	samtools view -@ $THREADS -h $rmDupFile | awk -v var="$LongReadDistThr" 'function abs(v) {return v < 0 ? -v : v} { if(substr($1, 1, 1)=="@" || abs($9) >= var) print }' | samtools view -@ $THREADS -bhS - > $LongReadFile
-	samtools index -@ $THREADS $LongReadFile &
-	wait
-	bam2pairs $LongReadFile $SegDir'/'$PREFIX'.cis.long' &
-	bam2pairs $ShortReadFile $SegDir'/'$PREFIX'.cis.short' &
-	wait
-	samtools view -@ $THREADS -bhS $DumpedPairsSAMFile > $DumpedPairsBAMFile
-	rm $DumpedPairsSAMFile
-	macs2dir=$OutDir'/PeaksAnchors_ShortSegment_Fastq_Latest'
-	mkdir -p $macs2dir
-	macs2 callpeak -f AUTO -g $GSIZE --outdir $macs2dir -n $PREFIX --nomodel --extsize 147 --call-summits -t $ShortReadFile -q 0.01
-	grep -vwE "chrM" $macs2dir/$PREFIX'_peaks.narrowPeak' | sort -S 50% --parallel=200 -k5,5rn - | cut -f1-5 - > $macs2dir/$PREFIX.anchors.bed &
-	macs2dir=$OutDir'/PeaksAnchors_CompleteAlignment_Fastq_Latest'
-	mkdir -p $macs2dir
-	macs2 callpeak -f AUTO -g $GSIZE --outdir $macs2dir -n $PREFIX --nomodel --extsize 147 --call-summits -t $rmDupFile -q 0.01
-	grep -vwE "chrM" $macs2dir/$PREFIX'_peaks.narrowPeak' | sort -S 50% --parallel=200 -k5,5rn - | cut -f1-5 - > $macs2dir/$PREFIX.anchors.bed &
-	wait
-	sed "s?/path/to/bam/inp.bam?$rmDupFile?;s?/path/to/bam/inp.narrowPeak?$macs2dir/$PREFIX.anchors.bed?;s?/path/to/OutDir?$OutDir?;s?PREFIX=FitHiChIP?PREFIX=FitHiChIP.$PREFIX?" $configtemp > $PREFIX.config
-	FitHiChIP.sh -C $PREFIX.config &
+	# cd $workdir
 
 	# hichipper needs hicpro_output
-	# cd $workdir
+	cd $workdir
 	################ relative directory
 	echo "peaks:" > hichipper.$PREFIX.yaml
-	# echo "  - $macs2dir/$PREFIX.anchors.bed" >> hichipper.$PREFIX.yaml
-	# echo "  - $macs2dir/${PREFIX}_peaks.narrowPeak" >> hichipper.$PREFIX.yaml
-	echo "  - map.res/$PREFIX/PeaksAnchors_CompleteAlignment_Fastq_Latest/${PREFIX}_peaks.narrowPeak" >> hichipper.$PREFIX.yaml
+	echo "  - EACH,ALL" >> hichipper.$PREFIX.yaml
 	echo "resfrags:" >> hichipper.$PREFIX.yaml
 	echo "  - RestrictionFragmentFiles/hg19_MboI_resfrag.bed.gz" >> hichipper.$PREFIX.yaml
 	echo "hicpro_output:" >> hichipper.$PREFIX.yaml

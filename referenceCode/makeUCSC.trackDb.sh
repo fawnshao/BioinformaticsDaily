@@ -8,9 +8,9 @@ do
 	echo "shortLabel $name"
 	echo "longLabel $name"
 	echo "type bigWig"
-	a=`seq 0 255 | shuf | head -1`
-	b=`seq 0 255 | shuf | head -1`
-	c=`seq 0 255 | shuf | head -1`
+	a=`seq 0 255 | gshuf | head -1`
+	b=`seq 0 255 | gshuf | head -1`
+	c=`seq 0 255 | gshuf | head -1`
 	echo "color $a,$b,$c"
 	echo "autoScale on"
 	echo "visibility full"

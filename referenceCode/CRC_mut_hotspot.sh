@@ -28,6 +28,16 @@ done
 # 182145
 #    56122 bedtools.cluster.WGS.COAD-US
 #   521271 bedtools.cluster.WGS.COCA-CN
+myperl=add_any_2files_together.pl 
+# for f in WGS.COAD-US.bed WGS.COCA-CN.bed
+# do
+# 	pre=`echo $f | sed 's/.bed//'`
+# 	perl $myperl bedtools.cluster.$pre <(awk '$2>5{print $1}' bedtools.cluster.$pre.counts) 4 0 | cut -f 2-5 > gt5.$f
+# done
+pre=WGS.COAD-US
+perl $myperl bedtools.cluster.$pre <(awk '$2>5{print $1}' bedtools.cluster.$pre.counts) 4 0 | cut -f 2-5 > top.$pre.bed
+pre=WGS.COCA-CN
+perl $myperl bedtools.cluster.$pre <(awk '$2>100{print $1}' bedtools.cluster.$pre.counts) 4 0 | cut -f 2-5 > top.$pre.bed
 
 for f in WGS.COAD-US.bed WGS.COCA-CN.bed
 do
@@ -71,6 +81,53 @@ done
 # 	done
 # done
 
+
+for reg in WGS.mut/d100/top.WGS.CO*
+do
+	pre=`echo $reg | awk -F"/" '{print $NF}' | awk -F"." '{print $(NF-1)}'`
+	for f in `ls bigwig.files/ | awk -F"." '{print $3}' | sort | uniq`
+	do
+		computeMatrix reference-point \
+			-R $reg \
+			-S bigwig.files/*${f}*.bigwig \
+			-p 48 \
+			-b 100 -a 100 -bs 5 \
+			--referencePoint center \
+			--skipZeros -o d100.$pre.${f}_center.gz \
+			--outFileNameMatrix d100.$pre.${f}_center.tab \
+			--outFileSortedRegions d100.$pre.${f}_center.bed
+		labs=`ls bigwig.files/*${f}*.bigwig | awk -F"/" '{print $NF}' | awk -F"." '{print $2"."$3}' | tr "\n" " "`
+		plotHeatmap -m d100.$pre.${f}_center.gz \
+			-o d100.$pre.${f}_center.plotHeatmap.pdf \
+			--colorMap Greens --whatToShow 'heatmap and colorbar' \
+			--plotFileFormat pdf --samplesLabel $labs \
+			--heatmapWidth 10 \
+			--kmeans 3 \
+			--outFileSortedRegions d100.$pre.${f}_center.k3.sortedRegions.bed &
+		computeMatrix reference-point \
+			-R $reg \
+			-S bigwig.files/*${f}*.bigwig \
+			-p 48 \
+			-b 5000 -a 5000 -bs 5 \
+			--referencePoint center \
+			--skipZeros -o d100.5k.$pre.${f}_center.gz \
+			--outFileNameMatrix d100.5k.$pre.${f}_center.tab \
+			--outFileSortedRegions d100.5k.$pre.${f}_center.bed
+		plotHeatmap -m d100.5k.$pre.${f}_center.gz \
+			-o d100.$pre.5k.${f}_center.plotHeatmap.pdf \
+			--colorMap Greens --whatToShow 'heatmap and colorbar' \
+			--plotFileFormat pdf --samplesLabel $labs \
+			--heatmapWidth 10 \
+			--kmeans 3 \
+			--outFileSortedRegions d100.$pre.5k.${f}_center.k3.sortedRegions.bed &
+	done	
+done
+
+
+
+
+
+
 for f in bedtools.merge.WGS.*
 do
 	awk '$3-$2<100' $f > single.$f
@@ -109,11 +166,12 @@ do
 	pre=`echo $reg | awk -F"/" '{print $NF}' | awk -F"." '{print $NF}'`
 	for f in `ls bigwig.files/ | awk -F"." '{print $3}' | sort | uniq`
 	do
-		computeMatrix --referencePoint center \
+		computeMatrix reference-point \
 			-R $reg \
 			-S bigwig.files/*${f}*.bigwig \
 			-p 48 \
 			-b 1000 -a 1000 -bs 10 \
+			--referencePoint center \
 			--skipZeros -o single.$pre.${f}_center.gz \
 			--outFileNameMatrix single.$pre.${f}_center.tab \
 			--outFileSortedRegions single.$pre.${f}_genes.bed
