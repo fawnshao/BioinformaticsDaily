@@ -1,7 +1,7 @@
 #!/bin/sh
 # rclone sync /home1/04935/shaojf/scratch/TIP60.project/ mygoogle:TIP60.KAT5/TIP60.project/
 myperl=/home1/04935/shaojf/myTools/BioinformaticsDaily/textProcess/add_any_2files_together.pl
-
+mydeseq=/home1/04935/shaojf/myTools/BioinformaticsDaily/referenceCode/runDESeq2.R
 # cd /home1/04935/shaojf/scratch/TIP60.project/
 
 #### additional analysis for ATAC-Seq
@@ -240,4 +240,151 @@ wait
 
 bedtools merge -d 5000 -i hela.enhancer.bed > merged.hela.enhancer.bed
 
+#################################################################################
+# use sjf eRNA list
+cat intergenic.eRNA.bed intragenic.eRNA.bed | bedtools sort -i - > Hela.eRNA.basedonENCODE.bed
+awk -vOFS="\t" '{print $4,$1,$2,$3,$6,"2000"}' Hela.eRNA.basedonENCODE.bed > Hela.eRNA.forHomer.txt
+analyzeRepeats.pl rna hg19 -d Homer.tags/Hela-si*-GROseq -strand + -raw -condenseGenes > Hela.gene.raw.txt
+analyzeRepeats.pl rna hg19 -d Homer.tags/Hela-si*-GROseq -strand + -fpkm -condenseGenes > Hela.gene.fpkm.txt
+analyzeRepeats.pl Hela.eRNA.forHomer.txt hg19 -d Homer.tags/Hela-si*-GROseq -strand + -raw > Hela.eRNA.raw.txt
+analyzeRepeats.pl Hela.eRNA.forHomer.txt hg19 -d Homer.tags/Hela-si*-GROseq -strand + -fpkm > Hela.eRNA.fpkm.txt
 
+head -1 Hela.gene.raw.txt | cut -f 2-5,9-17 | sed 's?Homer.tags/??g' | tr "\t" "\n" | awk '{print $1}' | tr "\n" "\t" | sed 's?\t$??' | awk '{print "ID\t"$0}' > Hela.gene.eRNA.counts
+tail -n +2 Hela.gene.raw.txt | cut -f 1-5,9-17 >> Hela.gene.eRNA.counts
+tail -n +2 Hela.eRNA.raw.txt | cut -f 1-5,9-17 >> Hela.gene.eRNA.counts
+cut -f 1,6-7,12-13 Hela.gene.eRNA.counts > rep12.Hela.gene.eRNA.counts
+
+Rscript $mydeseq rep12.Hela.gene.eRNA.counts siCTL siCTL siTIP60 siTIP60
+# awk -vOFS="\t" '$23 < 0.01 {print $1,$14,$15,$16,$17,$19,$22,$23}' rep12.Hela.gene.eRNA.counts.DESeq2.out.tsv 
+# awk '$23 < 0.01 && $19 > 1 && $18 > 10' rep12.Hela.gene.eRNA.counts.DESeq2.out.tsv > rep12.Hela.gene.eRNA.counts.DESeq2.up.tsv
+awk '$23 < 0.01 && $19 > 1' rep12.Hela.gene.eRNA.counts.DESeq2.out.tsv > rep12.Hela.gene.eRNA.counts.DESeq2.up.tsv
+awk '$23 < 0.01 && $19 < -1' rep12.Hela.gene.eRNA.counts.DESeq2.out.tsv > rep12.Hela.gene.eRNA.counts.DESeq2.down.tsv
+
+perl $myperl <(awk -vOFS="\t" '{print $2,$3,$4,$1,".",$5}' Hela.gene.eRNA.counts | tail -n +2) <(cut -f 1 rep12.Hela.gene.eRNA.counts.DESeq2.up.tsv | grep genic_) 3 0 | cut -f 2- | sort -k6,6 -k1,4 > up.eRNA.bed
+perl $myperl <(awk -vOFS="\t" '{print $2,$3,$4,$1,".",$5}' Hela.gene.eRNA.counts | tail -n +2) <(cut -f 1 rep12.Hela.gene.eRNA.counts.DESeq2.up.tsv | grep -v genic_) 3 0 | cut -f 2- | sort -k6,6 -k1,4 > up.gene.bed
+perl $myperl <(awk -vOFS="\t" '{print $2,$3,$4,$1,".",$5}' Hela.gene.eRNA.counts | tail -n +2) <(cut -f 1 rep12.Hela.gene.eRNA.counts.DESeq2.down.tsv | grep genic_) 3 0 | cut -f 2- | sort -k6,6 -k1,4 > down.eRNA.bed
+perl $myperl <(awk -vOFS="\t" '{print $2,$3,$4,$1,".",$5}' Hela.gene.eRNA.counts | tail -n +2) <(cut -f 1 rep12.Hela.gene.eRNA.counts.DESeq2.down.tsv | grep -v genic_) 3 0 | cut -f 2- | sort -k6,6 -k1,4 > down.gene.bed
+
+bedtools intersect -wa -a <(cat int??genic.enhancer.p300.peaks | cut -f 1-6) -b up.eRNA.bed | sort | uniq > up.eRNA.p300.peaks
+awk -vOFS="\t" '{a=$2-1;b=$2;if($6=="-"){a=$3-1;b=$3}print $1,a,b,$4,$5,$6}' up.gene.bed > up.tss.bed
+awk -vOFS="\t" '{a=$2-1;b=$2;if($6=="-"){a=$3-1;b=$3}print $1,a,b,$4,$5,$6}' down.gene.bed > down.tss.bed
+awk -vOFS="\t" '{a=$3-1;b=$3;if($6=="-"){a=$2-1;b=$2}print $1,a,b,$4,$5,$6}' up.gene.bed > up.tes.bed
+awk -vOFS="\t" '{a=$3-1;b=$3;if($6=="-"){a=$2-1;b=$2}print $1,a,b,$4,$5,$6}' down.gene.bed > down.tes.bed
+
+# labs=`ls Hela-si{CTL,TIP60}-rpt{1,2}-*.ucsc.bigWig | sed 's/Hela-//g;s/.ucsc.bigWig//g'`
+# computeMatrix reference-point --referencePoint center --missingDataAsZero \
+# -R up.eRNA.p300.peaks up.tss.bed up.tes.bed down.tss.bed down.tes.bed \
+# -S hg19.MichaelSnyder.p300.rep12.ENCFF289TVJ.bigWig \
+# GSM733684_hg19_wgEncodeBroadHistoneHelas3H3k27acStdSig.bigWig \
+# hg19.RichardMyers.pol2.rep12.ENCFF959MZN.bigWig \
+# Hela-si{CTL,TIP60}-rpt{1,2}-*.ucsc.bigWig \
+# -out Hela.DESeq2res.computeMatrix.gz \
+# -b 3000 -a 3000 -bs 50 -p 272
+# plotHeatmap -m Hela.DESeq2res.computeMatrix.gz -o Hela.DESeq2res.plotHeatmap.pdf --colorMap Greens --whatToShow 'heatmap and colorbar' --plotFileFormat pdf --samplesLabel p300 H3K27ac Pol2 $labs --heatmapWidth 10 # --sortRegions keep
+# plotProfile -m Hela.DESeq2res.computeMatrix.gz -o Hela.DESeq2res.plotProfile.pdf --plotFileFormat pdf --samplesLabel p300 H3K27ac Pol2 $labs --plotWidth 20 --plotHeight 10 --perGroup
+
+labs=`ls Hela-si{CTL,TIP60}-rpt{1,2}-*.ucsc.bigWig | sed 's/Hela-//g;s/.ucsc.bigWig//g'`
+computeMatrix reference-point --referencePoint center --missingDataAsZero \
+-R up.eRNA.p300.peaks up.tss.bed up.tes.bed down.tss.bed down.tes.bed \
+-S hg19.MichaelSnyder.p300.rep12.ENCFF289TVJ.bigWig \
+hg19.BradleyBernstein.H3K27ac.rep12.ENCFF388WMD.bigWig \
+hg19.RichardMyers.pol2.rep12.ENCFF959MZN.bigWig \
+-out Hela.DESeq2res.ChIP.computeMatrix.gz \
+-b 3000 -a 3000 -bs 10 -p 6
+plotHeatmap -m Hela.DESeq2res.ChIP.computeMatrix.gz -o Hela.DESeq2res.ChIP.srt.plotHeatmap.pdf --colorMap Greens --whatToShow 'heatmap and colorbar' --plotFileFormat pdf --samplesLabel p300 H3K27ac Pol2 --heatmapWidth 10
+plotHeatmap -m Hela.DESeq2res.ChIP.computeMatrix.gz -o Hela.DESeq2res.ChIP.plotHeatmap.pdf --colorMap Greens --whatToShow 'heatmap and colorbar' --plotFileFormat pdf --samplesLabel p300 H3K27ac Pol2 --heatmapWidth 10 --sortRegions keep
+plotProfile -m Hela.DESeq2res.ChIP.computeMatrix.gz -o Hela.DESeq2res.ChIP.plotProfile.pdf --plotFileFormat pdf --samplesLabel p300 H3K27ac Pol2 --plotWidth 20 --plotHeight 10 --perGroup
+
+labs=`ls Hela-si{CTL,TIP60}-rpt{1,2}-*.ucsc.bigWig | sed 's/Hela-//g;s/.ucsc.bigWig//g'`
+computeMatrix reference-point --referencePoint center --missingDataAsZero \
+-R up.eRNA.p300.peaks up.tss.bed up.tes.bed down.tss.bed down.tes.bed \
+-S Hela-si{CTL,TIP60}-rpt{1,2}-*.ucsc.bigWig \
+-out Hela.DESeq2res.GRO.computeMatrix.gz \
+-b 3000 -a 3000 -bs 10 -p 6
+plotHeatmap -m Hela.DESeq2res.GRO.computeMatrix.gz -o Hela.DESeq2res.GRO.srt.plotHeatmap.pdf --colorMap Greens --whatToShow 'heatmap and colorbar' --plotFileFormat pdf --samplesLabel $labs --heatmapWidth 10
+plotHeatmap -m Hela.DESeq2res.GRO.computeMatrix.gz -o Hela.DESeq2res.GRO.plotHeatmap.pdf --colorMap Greens --whatToShow 'heatmap and colorbar' --plotFileFormat pdf --samplesLabel $labs --heatmapWidth 10 --sortRegions keep
+plotProfile -m Hela.DESeq2res.GRO.computeMatrix.gz -o Hela.DESeq2res.GRO.plotProfile.pdf --plotFileFormat pdf --samplesLabel $labs --plotWidth 20 --plotHeight 10 --perGroup
+
+labs=`ls ../Feng.data/bigwig/Hela-si{CTL,TIP60}-rpt{1,2}-GROseq.ucsc.bigWig | awk -F"/" '{print $NF}' | sed 's/Hela-//g;s/.ucsc.bigWig//g'`
+computeMatrix reference-point --referencePoint center --missingDataAsZero \
+-R up.eRNA.p300.peaks up.tss.bed up.tes.bed down.tss.bed down.tes.bed \
+-S ../Feng.data/bigwig/Hela-si{CTL,TIP60}-rpt{1,2}-GROseq.ucsc.bigWig \
+-out Hela.DESeq2res.GRO.comb.computeMatrix.gz \
+-b 3000 -a 3000 -bs 10 -p 6
+plotHeatmap -m Hela.DESeq2res.GRO.comb.computeMatrix.gz -o Hela.DESeq2res.GRO.comb.srt.plotHeatmap.pdf --colorMap Greens --whatToShow 'heatmap and colorbar' --plotFileFormat pdf --samplesLabel $labs --heatmapWidth 10
+plotHeatmap -m Hela.DESeq2res.GRO.comb.computeMatrix.gz -o Hela.DESeq2res.GRO.comb.plotHeatmap.pdf --colorMap Greens --whatToShow 'heatmap and colorbar' --plotFileFormat pdf --samplesLabel $labs --heatmapWidth 10 --sortRegions keep
+plotProfile -m Hela.DESeq2res.GRO.comb.computeMatrix.gz -o Hela.DESeq2res.GRO.comb.plotProfile.pdf --plotFileFormat pdf --samplesLabel $labs --plotWidth 20 --plotHeight 10 --perGroup
+
+
+##### Feng's DEG
+awk '$6=="+"' Increase_genes_siTIP60.bed | bedtools sort -i - > srt.Increase_genes_siTIP60.bed
+awk '$6=="-"' Increase_genes_siTIP60.bed | bedtools sort -i - >> srt.Increase_genes_siTIP60.bed
+awk '$6=="+"' Decrease_genes_siTIP60.bed | bedtools sort -i - > srt.Decrease_genes_siTIP60.bed
+awk '$6=="-"' Decrease_genes_siTIP60.bed | bedtools sort -i - >> srt.Decrease_genes_siTIP60.bed
+labs=`ls Hela-si{CTL,TIP60}-rpt{1,2}-*.ucsc.bigWig | sed 's/Hela-//g;s/.ucsc.bigWig//g'`
+computeMatrix scale-regions --missingDataAsZero \
+-R srt.Increase_genes_siTIP60.bed srt.Decrease_genes_siTIP60.bed \
+-S Hela-si{CTL,TIP60}-rpt{1,2}-*.ucsc.bigWig \
+-out Hela.srt.FengDEG.GRO.computeMatrix.gz \
+-b 3000 -a 3000 -bs 10 -p 271 --regionBodyLength 5000
+plotHeatmap -m Hela.srt.FengDEG.GRO.computeMatrix.gz -o Hela.srt.FengDEG.GRO.plotHeatmap.pdf --colorMap Greens --whatToShow 'heatmap and colorbar' --plotFileFormat pdf --samplesLabel $labs --heatmapWidth 10 --sortRegions keep
+
+awk '$6=="+"' Increase_genes_siTIP60.bed | bedtools sort -i - > srt.pos.Increase_genes_siTIP60.bed
+awk '$6=="-"' Increase_genes_siTIP60.bed | bedtools sort -i - > srt.neg.Increase_genes_siTIP60.bed
+awk '$6=="+"' Decrease_genes_siTIP60.bed | bedtools sort -i - > srt.pos.Decrease_genes_siTIP60.bed
+awk '$6=="-"' Decrease_genes_siTIP60.bed | bedtools sort -i - > srt.neg.Decrease_genes_siTIP60.bed
+labs1=`ls Hela-si{CTL,TIP60}-rpt{1,2}-GROseqpos.ucsc.bigWig | sed 's/Hela-//g;s/.ucsc.bigWig//g'`
+labs2=`ls Hela-si{CTL,TIP60}-rpt{1,2}-GROseqneg.ucsc.bigWig | sed 's/Hela-//g;s/.ucsc.bigWig//g'`
+computeMatrix scale-regions --missingDataAsZero \
+-R srt.pos.Increase_genes_siTIP60.bed srt.pos.Decrease_genes_siTIP60.bed \
+srt.neg.Increase_genes_siTIP60.bed srt.neg.Decrease_genes_siTIP60.bed \
+-S Hela-si{CTL,TIP60}-rpt{1,2}-GROseqpos.ucsc.bigWig Hela-si{CTL,TIP60}-rpt{1,2}-GROseqneg.ucsc.bigWig \
+-out Hela.srt.sep.FengDEG.GRO.computeMatrix.gz \
+-b 3000 -a 3000 -bs 10 -p 271 --regionBodyLength 5000
+plotHeatmap -m Hela.srt.sep.FengDEG.GRO.computeMatrix.gz -o Hela.srt.sep.FengDEG.GRO.plotHeatmap.pdf --colorMap Greens --whatToShow 'heatmap and colorbar' --plotFileFormat pdf --samplesLabel $labs1 $labs2 --heatmapWidth 10
+plotHeatmap -m Hela.srt.sep.FengDEG.GRO.computeMatrix.gz -o Hela.srt.sep.FengDEG.GRO.keep.plotHeatmap.pdf --colorMap Greens --whatToShow 'heatmap and colorbar' --plotFileFormat pdf --samplesLabel $labs1 $labs2 --heatmapWidth 10 --sortRegions keep
+plotProfile -m Hela.srt.sep.FengDEG.GRO.computeMatrix.gz -o Hela.srt.sep.FengDEG.GRO.plotProfile.pdf --plotFileFormat pdf --samplesLabel $labs1 $labs2 --plotWidth 20 --plotHeight 10 --perGroup
+
+computeMatrix scale-regions --missingDataAsZero \
+-R Increase_genes_siTIP60.bed Decrease_genes_siTIP60.bed \
+-S Hela-si{CTL,TIP60}-rpt{1,2}-*.ucsc.bigWig \
+-out Hela.FengDEG.GRO.computeMatrix.gz \
+-b 3000 -a 3000 -bs 10 -p 6 --regionBodyLength 5000
+plotHeatmap -m Hela.FengDEG.GRO.computeMatrix.gz -o Hela.FengDEG.GRO.srt.plotHeatmap.pdf --colorMap Greens --whatToShow 'heatmap and colorbar' --plotFileFormat pdf --samplesLabel $labs --heatmapWidth 10
+plotHeatmap -m Hela.FengDEG.GRO.computeMatrix.gz -o Hela.FengDEG.GRO.plotHeatmap.pdf --colorMap Greens --whatToShow 'heatmap and colorbar' --plotFileFormat pdf --samplesLabel $labs --heatmapWidth 10 --sortRegions keep
+plotProfile -m Hela.FengDEG.GRO.computeMatrix.gz -o Hela.FengDEG.GRO.plotProfile.pdf --plotFileFormat pdf --samplesLabel $labs --plotWidth 20 --plotHeight 10 --perGroup
+
+labs=`ls ../Feng.data/bigwig/Hela-si{CTL,TIP60}-rpt{1,2}-GROseq.ucsc.bigWig | awk -F"/" '{print $NF}' | sed 's/Hela-//g;s/.ucsc.bigWig//g'`
+computeMatrix scale-regions --missingDataAsZero \
+-R Increase_genes_siTIP60.bed Decrease_genes_siTIP60.bed \
+-S ../Feng.data/bigwig/Hela-si{CTL,TIP60}-rpt{1,2}-GROseq.ucsc.bigWig \
+-out Hela.FengDEG.GRO.comb.computeMatrix.gz \
+-b 3000 -a 3000 -bs 10 -p 6 --regionBodyLength 5000
+plotHeatmap -m Hela.FengDEG.GRO.comb.computeMatrix.gz -o Hela.FengDEG.GRO.comb.srt.plotHeatmap.pdf --colorMap Greens --whatToShow 'heatmap and colorbar' --plotFileFormat pdf --samplesLabel $labs --heatmapWidth 10
+plotHeatmap -m Hela.FengDEG.GRO.comb.computeMatrix.gz -o Hela.FengDEG.GRO.comb.plotHeatmap.pdf --colorMap Greens --whatToShow 'heatmap and colorbar' --plotFileFormat pdf --samplesLabel $labs --heatmapWidth 10 --sortRegions keep
+plotProfile -m Hela.FengDEG.GRO.comb.computeMatrix.gz -o Hela.FengDEG.GRO.comb.plotProfile.pdf --plotFileFormat pdf --samplesLabel $labs --plotWidth 20 --plotHeight 10 --perGroup
+
+awk -vOFS="\t" '{a=$2-1;b=$2;if($6=="-"){a=$3-1;b=$3}print $1,a,b,NR,$5,$6}' Increase_genes_siTIP60.bed > Feng.up.tss.bed
+awk -vOFS="\t" '{a=$2-1;b=$2;if($6=="-"){a=$3-1;b=$3}print $1,a,b,NR,$5,$6}' Decrease_genes_siTIP60.bed > Feng.down.tss.bed
+awk -vOFS="\t" '{a=$3-1;b=$3;if($6=="-"){a=$2-1;b=$2}print $1,a,b,NR,$5,$6}' Increase_genes_siTIP60.bed > Feng.up.tes.bed
+awk -vOFS="\t" '{a=$3-1;b=$3;if($6=="-"){a=$2-1;b=$2}print $1,a,b,NR,$5,$6}' Decrease_genes_siTIP60.bed > Feng.down.tes.bed
+labs=`ls ../Feng.data/bigwig/Hela-si{CTL,TIP60}-rpt{1,2}-GROseq.ucsc.bigWig | awk -F"/" '{print $NF}' | sed 's/Hela-//g;s/.ucsc.bigWig//g'`
+computeMatrix reference-point --referencePoint center --missingDataAsZero \
+-R Feng.up.tss.bed Feng.down.tss.bed Feng.up.tes.bed Feng.down.tes.bed \
+-S ../Feng.data/bigwig/Hela-si{CTL,TIP60}-rpt{1,2}-GROseq.ucsc.bigWig \
+-out Hela.FengDEG.GRO.tsstes.comb.computeMatrix.gz \
+-b 3000 -a 3000 -bs 10 -p 272
+plotHeatmap -m Hela.FengDEG.GRO.tsstes.comb.computeMatrix.gz -o Hela.FengDEG.GRO.tsstes.comb.srt.plotHeatmap.pdf --colorMap Greens --whatToShow 'heatmap and colorbar' --plotFileFormat pdf --samplesLabel $labs --heatmapWidth 10
+plotHeatmap -m Hela.FengDEG.GRO.tsstes.comb.computeMatrix.gz -o Hela.FengDEG.GRO.tsstes.comb.plotHeatmap.pdf --colorMap Greens --whatToShow 'heatmap and colorbar' --plotFileFormat pdf --samplesLabel $labs --heatmapWidth 10 --sortRegions keep
+plotProfile -m Hela.FengDEG.GRO.tsstes.comb.computeMatrix.gz -o Hela.FengDEG.GRO.tsstes.comb.plotProfile.pdf --plotFileFormat pdf --samplesLabel $labs --plotWidth 20 --plotHeight 10 --perGroup
+
+labs=`ls Hela-si{CTL,TIP60}-rpt{1,2}-*.ucsc.bigWig | awk -F"/" '{print $NF}' | sed 's/Hela-//g;s/.ucsc.bigWig//g'`
+computeMatrix reference-point --referencePoint center --missingDataAsZero \
+-R Feng.up.tss.bed Feng.down.tss.bed Feng.up.tes.bed Feng.down.tes.bed \
+-S Hela-si{CTL,TIP60}-rpt{1,2}-*.ucsc.bigWig \
+-out Hela.FengDEG.GRO.tsstes.computeMatrix.gz \
+-b 3000 -a 3000 -bs 10 -p 272
+plotHeatmap -m Hela.FengDEG.GRO.tsstes.computeMatrix.gz -o Hela.FengDEG.GRO.tsstes.srt.plotHeatmap.pdf --colorMap Greens --whatToShow 'heatmap and colorbar' --plotFileFormat pdf --samplesLabel $labs --heatmapWidth 10
+plotHeatmap -m Hela.FengDEG.GRO.tsstes.computeMatrix.gz -o Hela.FengDEG.GRO.tsstes.plotHeatmap.pdf --colorMap Greens --whatToShow 'heatmap and colorbar' --plotFileFormat pdf --samplesLabel $labs --heatmapWidth 10 --sortRegions keep
+plotProfile -m Hela.FengDEG.GRO.tsstes.computeMatrix.gz -o Hela.FengDEG.GRO.tsstes.plotProfile.pdf --plotFileFormat pdf --samplesLabel $labs --plotWidth 20 --plotHeight 10 --perGroup
+##### Feng's DEG

@@ -1,4 +1,9 @@
 #!/bin/sh
+# the genomic feature of mutation hotspot
+### add chr or not?
+# high expression more mutation?
+# mutation in a TAD?
+
 for f in WGS.COAD-US.bed WGS.COCA-CN.bed
 do
 	pre=`echo $f | sed 's/.bed//'`
@@ -123,8 +128,47 @@ do
 	done	
 done
 
-
-
+for input in WGS.mut/d100/bedtools.merge.WGS.CO*
+do
+	pre=`echo $input | awk -F"/" '{print $NF}' | awk -F"." '{print $NF}'`
+	awk -vOFS="\t" '{print $0, $3-$2}' $input | sort -k4,4nr | head -100 | awk -vOFS="\t" '{print $1,$2,$3,$1":"$2"-"$3"#"$4}' > d100.top100.$pre.bed
+	for f in `ls bigwig.files/ | awk -F"." '{print $3}' | sort | uniq`
+	do
+		labs=`ls bigwig.files/*${f}*.bigwig | awk -F"/" '{print $NF}' | awk -F"." '{print $2"."$3}' | tr "\n" " "`
+		computeMatrix reference-point \
+			-R d100.top100.$pre.bed \
+			-S bigwig.files/*${f}*.bigwig \
+			-p 48 \
+			-b 3000 -a 3000 -bs 5 \
+			--referencePoint center \
+			--skipZeros -o d100.top100.$pre.${f}_center.gz \
+			--outFileNameMatrix d100.top100.$pre.${f}_center.tab \
+			--outFileSortedRegions d100.top100.$pre.${f}_center.bed
+		plotHeatmap -m d100.top100.$pre.${f}_center.gz \
+			-o d100.top100.$pre.${f}_center.plotHeatmap.pdf \
+			--colorMap Greens --whatToShow 'heatmap and colorbar' \
+			--plotFileFormat pdf --samplesLabel $labs \
+			--heatmapWidth 10 \
+			--kmeans 3 \
+			--outFileSortedRegions d100.top100.$pre.${f}_center.k3.sortedRegions.bed &
+		computeMatrix scale-regions \
+			-R d100.top100.$pre.bed \
+			-S bigwig.files/*${f}*.bigwig \
+			-p 48 \
+			-b 1000 -a 1000 -bs 5 \
+			--regionBodyLength 1000 \
+			--skipZeros -o d100.top100.$pre.${f}_scaled.gz \
+			--outFileNameMatrix d100.top100.$pre.${f}_scaled.tab \
+			--outFileSortedRegions d100.top100.$pre.${f}_genes.bed
+		plotHeatmap -m d100.top100.$pre.${f}_scaled.gz \
+			-o d100.top100.$pre.${f}_scaled.plotHeatmap.pdf \
+			--colorMap Greens --whatToShow 'heatmap and colorbar' \
+			--plotFileFormat pdf --samplesLabel $labs \
+			--heatmapWidth 10 \
+			--kmeans 3 \
+			--outFileSortedRegions d100.top100.$pre.${f}_scaled.k3.sortedRegions.bed &
+	done	
+done
 
 
 

@@ -79,7 +79,7 @@
 # /home1/04935/shaojf/myTools/HiChIP/HiC-Pro/annotation/hg19.MboI.bed
 
 # /home1/04935/shaojf/scratch/HiChIP.test/map.res/GM12878_cell_line.SRR5831489/FitHiChIP_Peak2ALL_b5000/Interaction_ALL
-
+# ll HiCPro.output/SRR583*/hic_results/
 
 export PATH=/home1/04935/shaojf/myTools/HiChIP/FitHiChIP/Preprocess:/home1/04935/shaojf/myTools/HiChIP/FitHiChIP/bin:/home1/04935/shaojf/myTools/HiChIP/FitHiChIP/scripts/BAM:/home1/04935/shaojf/myTools/HiChIP/FitHiChIP/scripts/PAIRIX:/home1/04935/shaojf/myTools/HiChIP/FitHiChIP:$PATH
 THREADS=200
@@ -99,8 +99,8 @@ rawDir=$workdir/raw.data
 fqDir=$workdir/fastq.data
 mapDir=$workdir/map.res
 inputfiles=$workdir/raw.data/a
-mkdir -p $mapDir
-mkdir -p $fqDir
+# mkdir -p $mapDir
+# mkdir -p $fqDir
 ln -s /home1/04935/shaojf/myTools/HiChIP/hichipper/RestrictionFragmentFiles
 alias sort="/bin/sort -S 50% --parallel=$THREADS"
 
@@ -128,10 +128,11 @@ do
 	# mkdir -p $HiCProOutputDir/$sra
 	ln -s $FASTQ1 $HiCProInputDir/$sra/${sra}_1.fastq.gz
 	ln -s $FASTQ2 $HiCProInputDir/$sra/${sra}_2.fastq.gz
-	HiC-Pro -i $HiCProInputDir -o $HiCProOutputDir -c $workdir/config-hicpro.txt
+	HiC-Pro -i $HiCProInputDir -o $HiCProOutputDir -c $workdir/config-hicpro.txt -p 10
 	FASTQFILE=$HiCProOutputDir/inputfiles_.txt; export FASTQFILE
-	make --file /home1/04935/shaojf/bin/HiC-Pro_2.10.0/scripts/Makefile CONFIG_FILE=/home1/04935/shaojf/scratch/HiChIP.test/config-hicpro.txt CONFIG_SYS=/home1/04935/shaojf/bin/HiC-Pro_2.10.0/config-system.txt all_sub 2>&1
 	cd $HiCProOutputDir
+	make --file /home1/04935/shaojf/bin/HiC-Pro_2.10.0/scripts/Makefile CONFIG_FILE=/home1/04935/shaojf/scratch/HiChIP.test/config-hicpro.txt CONFIG_SYS=/home1/04935/shaojf/bin/HiC-Pro_2.10.0/config-system.txt all_sub 2>&1
+	# cd $HiCProOutputDir
 	make --file /home1/04935/shaojf/bin/HiC-Pro_2.10.0/scripts/Makefile CONFIG_FILE=/home1/04935/shaojf/scratch/HiChIP.test/config-hicpro.txt CONFIG_SYS=/home1/04935/shaojf/bin/HiC-Pro_2.10.0/config-system.txt all_persample 2>&1
 	# cd $workdir
 
@@ -144,6 +145,6 @@ do
 	echo "  - RestrictionFragmentFiles/hg19_MboI_resfrag.bed.gz" >> hichipper.$PREFIX.yaml
 	echo "hicpro_output:" >> hichipper.$PREFIX.yaml
 	echo "  - HiCPro.output/$sra" >> hichipper.$PREFIX.yaml
-	hichipper --out hichipper.$PREFIX --read-length 76 hichipper.$PREFIX.yaml &
+	hichipper --out hichipper.$PREFIX --keep-temp-files --read-length 76 hichipper.$PREFIX.yaml &
 done < $inputfiles
 wait
