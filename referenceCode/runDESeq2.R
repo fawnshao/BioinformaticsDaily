@@ -16,6 +16,8 @@ dds <- DESeqDataSetFromMatrix(countData = inputdata,
                               design = ~ condition)
 dds <- DESeq(dds)
 resultsNames(dds) # lists the coefficients
+sizeFactors(dds)
+dispersions(dds)
 cmp <- paste("condition", coldata[nrow(coldata),1], "vs", coldata[1,1], sep="_")
 res <- results(dds, name = cmp)
 # or to shrink log fold changes association with condition:
