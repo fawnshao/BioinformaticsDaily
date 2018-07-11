@@ -1,5 +1,8 @@
 #!/bash/bash
-rclone sync -L /home1/04935/shaojf/scratch/T21/ mygoogle:T21/
+# rclone sync -L /home1/04935/shaojf/scratch/T21/ mygoogle:T21/
+mydeseq=/home1/04935/shaojf/myTools/BioinformaticsDaily/referenceCode/runDESeq2.R
+myperl=/home1/04935/shaojf/myTools/BioinformaticsDaily/textProcess/add_any_2files_together.pl
+
 mergePeaks *T21C1*peaks.narrowPeak > NSC.T21C1_peaks.merged
 # 	Max distance to merge: direct overlap required (-d given)
 # 	Merging peaks... 
@@ -58,5 +61,18 @@ Rscript ~/stampede2/myTools/BioinformaticsDaily/RVisualization/vennplot_from_a_s
 analyzeRepeats.pl all.NSC.T21C1-5_peaks.merged hg19 -d nochrM.*.mTD -strand both -raw > all.NSC.T21C1-5_peaks.raw.txt
 echo "ID NS13-Xiaoyu-NSC-T21C1_P9-350k NS13-Xiaoyu-NSC-T21C5_P4-500k NS14-Xiaoyu-NSC-T21C1_P8-50k NS14-Xiaoyu-NSC-T21C5_P4-50k" | tr " " "\t" > all.NSC.T21C1-5_peaks.sim.count.txt
 cut -f 1,9-12 all.NSC.T21C1-5_peaks.raw.txt | tail -n +2 >> all.NSC.T21C1-5_peaks.sim.count.txt
-Rscript $mydeseq rep12.Hela.gene.eRNA.counts siCTL siCTL siTIP60 siTIP60
+Rscript $mydeseq all.NSC.T21C1-5_peaks.sim.count.txt T21C1 T21C5 T21C1 T21C5
 
+awk '$23 < 0.01 && ($19 > 1 || $19 < -1)' all.NSC.T21C1-5_peaks.sim.count.txt.DESeq2.out.tsv > all.NSC.T21C1-5_peaks.de.txt
+perl $myperl <(cut -f 1-4 all.NSC.T21C1-5_peaks.merged | tail -n +2) <(cut -f 1 all.NSC.T21C1-5_peaks.de.txt) 0 0 | awk -vOFS="\t" '{print $3,$4,$5,$1}' > all.NSC.T21C1-5_peaks.de.bed
+
+labs="NSC.T21C1 NSC.T21C5 NSC.T21C1 NSC.T21C5"
+computeMatrix reference-point --referencePoint center --missingDataAsZero \
+-R all.NSC.T21C1-5_peaks.de.bed \
+-S *.bigWig \
+-out all.NSC.T21C1-5_peaks.de.computeMatrix.gz \
+-b 3000 -a 3000 -bs 10 -p 272
+plotHeatmap -m all.NSC.T21C1-5_peaks.de.computeMatrix.gz -o all.NSC.T21C1-5_peaks.de.srt.plotHeatmap.pdf --colorMap Greens --whatToShow 'heatmap and colorbar' --plotFileFormat pdf --samplesLabel $labs --heatmapWidth 10
+plotProfile -m all.NSC.T21C1-5_peaks.de.computeMatrix.gz -o all.NSC.T21C1-5_peaks.de.plotProfile.pdf --plotFileFormat pdf --samplesLabel $labs --plotWidth 20 --plotHeight 10
+plotHeatmap -m all.NSC.T21C1-5_peaks.de.computeMatrix.gz -o all.NSC.T21C1-5_peaks.de.srt.k3.plotHeatmap.pdf --colorMap Greens --whatToShow 'heatmap and colorbar' --plotFileFormat pdf --samplesLabel $labs --heatmapWidth 10 --kmeans 3 --outFileSortedRegions all.NSC.T21C1-5_peaks.de.srt.k3.bed
+plotProfile -m all.NSC.T21C1-5_peaks.de.computeMatrix.gz -o all.NSC.T21C1-5_peaks.de.k3.plotProfile.pdf --plotFileFormat pdf --samplesLabel $labs --plotWidth 20 --plotHeight 10 --kmeans 3
