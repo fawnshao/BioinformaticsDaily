@@ -10,6 +10,7 @@ inputdata <- read.table(inputfile, header = T, row.names = 1, sep = "\t")
 
 coldata <- data.frame(condition = args[2:length(args)])
 rownames(coldata) <- colnames(inputdata)
+summary(coldata)
 
 dds <- DESeqDataSetFromMatrix(countData = inputdata,
                               colData = coldata,
