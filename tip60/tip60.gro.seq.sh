@@ -255,6 +255,9 @@ tail -n +2 Hela.eRNA.raw.txt | cut -f 1-5,9-17 >> Hela.gene.eRNA.counts
 cut -f 1,6-7,12-13 Hela.gene.eRNA.counts > rep12.Hela.gene.eRNA.counts
 
 Rscript $mydeseq rep12.Hela.gene.eRNA.counts siCTL siCTL siTIP60 siTIP60
+# Rscript $mydeseq rep12.Hela.gene.counts siCTL siCTL siTIP60 siTIP60 > rep12.Hela.gene.counts.log
+# Rscript $mydeseq rep12.Hela.eRNA.counts siCTL siCTL siTIP60 siTIP60 > rep12.Hela.eRNA.counts.log
+
 # awk -vOFS="\t" '$23 < 0.01 {print $1,$14,$15,$16,$17,$19,$22,$23}' rep12.Hela.gene.eRNA.counts.DESeq2.out.tsv 
 # awk '$23 < 0.01 && $19 > 1 && $18 > 10' rep12.Hela.gene.eRNA.counts.DESeq2.out.tsv > rep12.Hela.gene.eRNA.counts.DESeq2.up.tsv
 awk '$23 < 0.01 && $19 > 1' rep12.Hela.gene.eRNA.counts.DESeq2.out.tsv > rep12.Hela.gene.eRNA.counts.DESeq2.up.tsv

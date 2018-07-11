@@ -7,17 +7,21 @@ args <- commandArgs(TRUE)
 library(DESeq2)
 inputfile <- args[1]
 inputdata <- read.table(inputfile, header = T, row.names = 1, sep = "\t")
+print("summary(inputdata)")
+summary(inputdata)
 
 coldata <- data.frame(condition = args[2:length(args)])
 rownames(coldata) <- colnames(inputdata)
-summary(coldata)
 
 dds <- DESeqDataSetFromMatrix(countData = inputdata,
                               colData = coldata,
                               design = ~ condition)
 dds <- DESeq(dds)
+print("resultsNames(dds)")
 resultsNames(dds) # lists the coefficients
+print("sizeFactors(dds)")
 sizeFactors(dds)
+print("dispersions(dds)")
 dispersions(dds)
 cmp <- paste("condition", coldata[nrow(coldata),1], "vs", coldata[1,1], sep="_")
 res <- results(dds, name = cmp)
