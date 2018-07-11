@@ -5,6 +5,13 @@ args <- commandArgs(TRUE)
 # sizeFactors( cds )
 # head(counts( cds, normalized=TRUE))
 library(DESeq2)
+# converting counts to integer mode
+# estimating size factors
+# estimating dispersions
+# gene-wise dispersion estimates
+# mean-dispersion relationship
+# final dispersion estimates
+# fitting model and testing
 inputfile <- args[1]
 inputdata <- read.table(inputfile, header = T, row.names = 1, sep = "\t")
 print("summary(inputdata)")
