@@ -50,3 +50,5 @@ do
 	gunzip -c $f | cut -f 1-4 | awk -v var="$experiment" '{print $0"\t"var}' >> hg19.wgEncodeBroadHmm.bed
 done
 
+grep -v -i -e "cell" -e "blood" -e "cultured" hg19.wgEncodeBroadHmm.bed > hg19.tissue.roadmap.25_imputed12marks.bed
+grep -w -e 13_EnhA1 -e 14_EnhA2 -e 15_EnhAF hg19.tissue.roadmap.25_imputed12marks.bed > hg19.tissue.roadmap.activeenhancer.bed

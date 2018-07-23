@@ -12,5 +12,5 @@ foreach $id(sort keys %hash){
 	%thash = map { $_ => 1 } @t;
 	@ut = keys %thash;
 	$a = join(";", @ut);
-	print "$id\t$a\n";
+	print "$id\t@ut:$a\n";
 }
