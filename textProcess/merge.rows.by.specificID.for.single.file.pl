@@ -8,8 +8,8 @@ while(<IN>){
 }
 close(IN);
 foreach $id(sort keys %hash){
-	@t = split(/;/, $hash{$id});
-	@ut = keys { map { $_ => 1 } @t };
-	$a = join(";", @ut);
+	my @t = split(/;/, $hash{$id});
+	my @ut = keys { map { $_ => 1 } @t };
+	my $a = join(";", @ut);
 	print "$id\t$a\n";
 }
