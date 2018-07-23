@@ -9,7 +9,8 @@ while(<IN>){
 close(IN);
 foreach $id(sort keys %hash){
 	@t = split(/;/, $hash{$id});
-	@ut = keys %{ map { $_ => 1 } @t };
+	%thash = map { $_ => 1 } @t;
+	@ut = keys %thash;
 	$a = join(";", @ut);
 	print "$id\t$a\n";
 }
