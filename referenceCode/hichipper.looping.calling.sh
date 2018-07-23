@@ -129,6 +129,7 @@ do
 	ln -s $FASTQ1 $HiCProInputDir/$sra/${sra}_1.fastq.gz
 	ln -s $FASTQ2 $HiCProInputDir/$sra/${sra}_2.fastq.gz
 	HiC-Pro -i $HiCProInputDir -o $HiCProOutputDir -c $workdir/config-hicpro.txt -p 10
+	# HiC-Pro -i $HiCProInputDir -o $HiCProOutputDir -c $workdir/config-hicpro.txt -p 10 -s proc_hic -s quality_checks -s build_contact_maps -s ice_norm
 	FASTQFILE=$HiCProOutputDir/inputfiles_.txt; export FASTQFILE
 	cd $HiCProOutputDir
 	make --file /home1/04935/shaojf/bin/HiC-Pro_2.10.0/scripts/Makefile CONFIG_FILE=/home1/04935/shaojf/scratch/HiChIP.test/config-hicpro.txt CONFIG_SYS=/home1/04935/shaojf/bin/HiC-Pro_2.10.0/config-system.txt all_sub 2>&1
