@@ -6,7 +6,7 @@ while(<IN>){
     chomp;
     @t = split(/\t/);
     if($t[11] < 1000) {
-    	$hash{$t[3]} += $t[11];
+    	$hash{$t[3]} += $t[10];
     }
     else{
     	$hash{$t[3]} += 1000;
