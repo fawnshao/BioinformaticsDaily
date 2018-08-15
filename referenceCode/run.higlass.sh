@@ -5,8 +5,15 @@ do
 done
 
 docker pull gehlenborglab/higlass # Ensure that you have the latest.
+# docker run --detach \
+#            --publish 8888:80 \
+#            --volume ~/hg-data:/data \
+#            --volume ~/hg-tmp:/tmp \
+#            --name higlass-container \
+#            gehlenborglab/higlass
+
 docker run --detach \
-           --publish 8888:80 \
+           --publish 8899:80 \
            --volume ~/hg-data:/data \
            --volume ~/hg-tmp:/tmp \
            --name higlass-container \
