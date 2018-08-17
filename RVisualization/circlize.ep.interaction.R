@@ -32,7 +32,7 @@ for(i in 1:nrow(segs)){
 
 # links[links[,3] < 5,] <- 0
 for(i in 1:nrow(links)){
-    shift <- rnorm(1, mean = 0, sd = 0.2)
+    shift <- 0 # rnorm(1, mean = 0, sd = 0.2)
     circos.link(levels(df$factors), links[i,1], levels(df$factors), links[i,2], h = 0.4 + shift, lwd = min(links[i,3], 10))
 }
 
