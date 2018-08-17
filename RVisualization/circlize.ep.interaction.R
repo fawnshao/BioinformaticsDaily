@@ -11,7 +11,7 @@ df <- df[,-2]
 colnames(df) <- c("factors", "x")
 
 circos.clear()
-# png(filename = paste(args[1], "circlize.png", sep = "."), width = 1000, height = 1000)
+png(filename = paste(args[1], "circlize.png", sep = "."), width = 1000, height = 1000)
 
 circos.par("track.height" = 0.1)
 circos.initialize(factors = df$factors, x = df$x)
@@ -36,5 +36,5 @@ for(i in 1:nrow(links)){
     circos.link(levels(df$factors), links[i,1], levels(df$factors), links[i,2], h = 0.4 + shift, lwd = min(links[i,3], 10))
 }
 
-# dev.off()
+dev.off()
 # circos.clear()
