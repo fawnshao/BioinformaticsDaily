@@ -68,9 +68,9 @@ plot(network,
      # vertex.color = vertices$group, # color vertices by edge betweeness
      vertex.color = vertices$color,
      vertex.label = NA, # no vertex label (name)
-     vertex.size = 1,
+     vertex.size = 5,
      # edge.arrow.size = 0.8,
-     edge.width = min(links$V3, 5)/5,
+     edge.width = min(links$V3, 5),
      vertex.shape = vertices$shape)
 dev.off()
 
