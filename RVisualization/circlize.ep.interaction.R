@@ -13,7 +13,7 @@ colnames(df) <- c("factors", "x")
 circos.clear()
 png(filename = paste(args[1], "circlize.png", sep = "."), width = 1000, height = 1000)
 
-circos.par("track.height" = 0.1)
+circos.par("track.height" = 0.25)
 circos.initialize(factors = df$factors, x = df$x)
 
 circos.track(factors = df$factors, ylim = c(0,1),
@@ -25,14 +25,14 @@ circos.track(factors = df$factors, ylim = c(0,1),
              })
 
 for(i in 1:nrow(segs)){
-    shift <- rnorm(1, mean = 0, sd = 0.1)
+    shift <- rnorm(1, mean = 0, sd = 0.2)
     circos.segments(segs[i,2], 0.5 + shift, segs[i,3], 0.5 + shift, col = as.character(segs[i,5]), lwd = 2)
     # circos.text(segs[i,3], 1 + shift, segs[i,4], col = as.character(segs[i,5]), cex = 0.6, niceFacing = F, facing = "bending.inside")
 }
 
 # links[links[,3] < 5,] <- 0
 for(i in 1:nrow(links)){
-    shift <- rnorm(1, mean = 0, sd = 0.1)
+    shift <- rnorm(1, mean = 0, sd = 0.2)
     circos.link(levels(df$factors), links[i,1], levels(df$factors), links[i,2], h = 0.4 + shift, lwd = min(links[i,3], 10))
 }
 
