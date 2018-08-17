@@ -27,7 +27,7 @@ circos.track(factors = df$factors, ylim = c(0,1),
 for(i in 1:nrow(segs)){
     shift <- rnorm(1, mean = 0, sd = 0.2)
     circos.segments(segs[i,2], 0.5 + shift, segs[i,3], 0.5 + shift, col = as.character(segs[i,5]), lwd = 2)
-    circos.text(segs[i,3], 1 + shift, segs[i,4], col = as.character(segs[i,5]), cex = 0.6, niceFacing = F, facing = "bending.inside")
+    circos.text(segs[i,3], 0.6 + shift, segs[i,4], col = as.character(segs[i,5]), cex = 0.6, niceFacing = F, facing = "bending.inside")
 }
 
 # links[links[,3] < 5,] <- 0
