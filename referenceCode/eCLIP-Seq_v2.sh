@@ -211,7 +211,7 @@ echo "step 6, calling peaks with clipper ......"
 mkdir $clippeaks
 for pre in $inputfile $IPA $IPB
 do
-	clipper -b ${pre}.rmRep.genome.sorted.r2.bam -s hg19 -o ${pre}.rmRep.genome.sorted.r2.peaks.bed --save-pickle
+	clipper -b ${pre}.rmRep.genome.sorted.r2.bam -s hg19 -o ${pre}.rmRep.genome.sorted.r2.peaks.bed --bonferroni --superlocal --threshold-method binomial --save-pickle
 	fix_scores.py --bed ${pre}.rmRep.genome.sorted.r2.peaks.bed --out_file ${pre}.rmRep.genome.sorted.r2.peaks.fixed.bed
 	bedToBigBed ${pre}.rmRep.genome.sorted.r2.peaks.fixed.bed $genomesize ${pre}.rmRep.genome.sorted.r2.peaks.fixed.bb -type=bed6+4 &
 done
@@ -223,20 +223,25 @@ mkdir $normalizedpeaks
 # uID	RBP	Cell line	CLIP_rep1	CLIP_rep2	INPUT
 # 001	RBM39	MCF-7	${IPA}.rmRep.genome.sorted.r2.bam	${IPA}.rmRep.genome.sorted.r2.bam	$inputfile.rmRep.genome.sorted.bam
 echo | awk -vOFS="\t" '{print "uID","RBP","Cell line","CLIP_rep1","CLIP_rep2","INPUT"}' > $IPA.$IPB.manifest.txt
-echo "001 $rbp $cell ${IPA}.rmRep.genome.sorted.r2.bam ${IPB}.rmRep.genome.sorted.r2.bam $inputfile.rmRep.genome.sorted.bam" | awk -vOFS="\t" '{print $0}' >> $IPA.$IPB.manifest.txt
+echo "001 $rbp $cell ${IPA}.rmRep.genome.sorted.r2.bam ${IPB}.rmRep.genome.sorted.r2.bam $inputfile.rmRep.genome.sorted.r2.bam" | awk -vOFS="\t" '{print $0}' >> $IPA.$IPB.manifest.txt
 Peak_input_normalization_wrapper.pl $IPA.$IPB.manifest.txt $normalizedpeaks
-wait
-mv *.bw $bw_dir/
-mv *r2.peaks* $clippeaks/
+awk '$4>3 && $5>=1' 001_01.basedon_001_01.peaks.l2inputnormnew.bed > ${IPA}.significant.peaks.bed
+awk '$4>3 && $5>=1' 001_02.basedon_001_02.peaks.l2inputnormnew.bed > ${IPB}.significant.peaks.bed
+mv ${IPA}.significant.peaks.bed $clippeaks/
+mv ${IPB}.significant.peaks.bed $clippeaks/
+
+
 # peaks.l2inputnormnew.bed
 # Chr \t start \t stop \t log10(p-value eCLIP vs SMInput) \t log2(fold-enrichmentin eCLIP vs SMInput) \t strand
 # peaks.l2inputnormnew.bed.full
 # Chr \t start \t stop \t peakID:CLIPer pvalue \t **** \t log10(p-value eCLIP vs SMInput) \t log2(fold-enrichmentin eCLIP vs SMInput)
-
+wait
+mv $mappingtogenome/*.rmRep.genome.sorted.r2.norm.pos.bw $bw_dir/
+########################################################################
 
 ### conda install -c bioconda PureCLIP
 # hg19file=/home1/04935/shaojf/scratch/star_index/hg19.fa
-# peak: 61.2% memory
+# peak: 83.3% memory
 # Run time 11:31:24
 for pre in $IPA $IPB
 do
@@ -246,7 +251,7 @@ do
 		-or ${pre}.called_bindingregions.bed \
 		-p ${pre}.learnedparameters.txt \
 		-ibam $inputfile.rmRep.genome.sorted.bam \
-		-ibai $inputfile.rmRep.genome.sorted.bam.bai -nt 68 -tmp ./${pre}.tmp/ &
+		-ibai $inputfile.rmRep.genome.sorted.bam.bai -nt 272 -tmp ./${pre}.tmp/ &
 done
 wait
 
