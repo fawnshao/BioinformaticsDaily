@@ -49,10 +49,10 @@ do
 		--alignEndsType Local
 
 	samtools view -@ 272 -q 10 -bo $BamDir/${pre}.q10.bam $BamDir/${pre}.Aligned.out.bam
-	samtools sort -@ 68 $BamDir/${pre}.q10.srt.bam $BamDir/${pre}.q10.bam
+	samtools sort -@ 12 -o $BamDir/${pre}.q10.srt.bam $BamDir/${pre}.q10.bam
 	samtools index -@ 68 $BamDir/${pre}.q10.srt.bam
-	samtools markdup -r -@ 272 $BamDir/${pre}.q10.srt.bam $BamDir/${pre}.rmdup.bam
-	makeTagDirectory $pre.mTD $BamDir/${pre}.rmdup.bam &
+	# samtools markdup -r -@ 272 $BamDir/${pre}.q10.srt.bam $BamDir/${pre}.rmdup.bam
+	makeTagDirectory $pre.mTD $BamDir/${pre}.q10.srt.bam -sspe -tbp 1 &
 done < sim.info.txt
 wait
-makeMultiWigHub.pl $hubname hg19 -url $BwDir -webdir $BwDir -d *.mTD
+makeMultiWigHub.pl $hubname hg19 -strand -url $BwDir -webdir $BwDir -d *.mTD

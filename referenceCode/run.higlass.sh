@@ -19,6 +19,7 @@ docker run --detach \
            --name higlass-container \
            gehlenborglab/higlass
 
+# docker rm a805b5e03ecbf0778589a188514e4291b0d442cba34f25468d1c00f7a22c8594
 # COOLER=dixon2012-h1hesc-hindiii-allreps-filtered.1000kb.multires.cool 
 # wget -P ~/hg-tmp https://s3.amazonaws.com/pkerp/public/$COOLER
 
