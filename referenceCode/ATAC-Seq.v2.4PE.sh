@@ -73,7 +73,7 @@ do
 	-1 $TrimadapterDir/$i.clean_1.fastq.gz -2 $TrimadapterDir/$i.clean_2.fastq.gz -S $i.sam
 	samtools view -1 -q 10 -bo $i.q10.bam --threads $Threads $i.sam
 	samtools sort --threads 20 $i.q10.bam -o $i.sorted.bam
-	makeTagDirectory $i.mTD -genome hg19 -checkGC -tbp 1 $i.sorted.bam
+	makeTagDirectory $i.mTD -genome hg19 -checkGC -tbp 1 -format sam <(samtools view -@ 10 -h $i.sorted.bam | grep -v "chrM")
 	findPeaks $i.mTD -style factor -o auto &
 	samtools fixmate --threads $Threads -m $i.q10.bam $i.fixmate.bam
 	samtools sort --threads 20 $i.fixmate.bam -o $i.fixmate.srt.bam

@@ -93,3 +93,57 @@ dev.off()
 # 
 # # plot the clique
 # plot(g2)
+
+
+################
+# g <- simplify(
+#     graph.compose(
+#         graph.ring(10), 
+#         graph.star(5, mode = "undirected")
+#     )
+# ) + edge("7", "8")
+
+g <- sample_gnp(20, 1/20)
+plot(g)
+gc <- clusters(g)
+lapply(seq_along(gc$csize)[gc$csize > 1], function(x) 
+    V(g)$name[gc$membership %in% x])
+
+set.seed(1)
+g <- erdos.renyi.game(20, 1/20)
+V(g)$name <- letters[1:20]
+par(mar=rep(0,4))
+plot(g)
+
+dg <- decompose.graph(g) # returns a list of three graphs
+plot(dg[[1]]) # plot e.g. the 1st one
+plot(dg[[2]])
+plot(dg[[3]])
+allnodes <- length(V(graph = g))
+node2community <- data.frame(Node = rep(NA, allnodes), Community = rep(NA, allnodes), CommunitySize = rep(NA, allnodes))
+k <- 1
+for(i in 1:length(dg)){
+    a <- names(V(graph = dg[[i]]))
+    size <- length(a)
+    for(j in 1:size){
+        node2community[k, ] <- c(a[j], paste("comp", i, sep = "."), size)
+        k <- k + 1
+    }
+}
+node2community
+cl <- clusters(g)
+lapply(seq_along(cl$csize)[cl$csize > 1], function(x) 
+    V(g)$name[cl$membership %in% x])
+
+
+
+components <- decompose(g, min.vertices=2)
+sapply(components, diameter)
+plot(components)
+
+clu <- components(g)
+groups(clu)
+plot(clu)
+
+subcomponent(g, 1, "all")
+plot(subgraph.edges(g, 1:5))

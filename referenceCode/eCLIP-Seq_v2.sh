@@ -217,14 +217,18 @@ do
 done
 
 ## step 7, peak normalization
+#### please be careful, list the full path for bam file
+# /home1/04935/shaojf/.local/bin/overlap_peakfi_with_bam_PE.pl line 68.
+# add 1 to avoid 0
+# my $l2fc = log(($peak_read_counts{$peak}{"expt"}/($mapped_read_count{"expt"} + 1)) / (($peak_read_counts{$peak}{"input"} + 1)/($mapped_read_count{"input"}) + 1)) / log(2);
 date
 echo "step 7, peak normalization ......"
-mkdir $normalizedpeaks
+# mkdir $normalizedpeaks
 # uID	RBP	Cell line	CLIP_rep1	CLIP_rep2	INPUT
 # 001	RBM39	MCF-7	${IPA}.rmRep.genome.sorted.r2.bam	${IPA}.rmRep.genome.sorted.r2.bam	$inputfile.rmRep.genome.sorted.bam
 echo | awk -vOFS="\t" '{print "uID","RBP","Cell line","CLIP_rep1","CLIP_rep2","INPUT"}' > $IPA.$IPB.manifest.txt
 echo "001 $rbp $cell ${IPA}.rmRep.genome.sorted.r2.bam ${IPB}.rmRep.genome.sorted.r2.bam $inputfile.rmRep.genome.sorted.r2.bam" | awk -vOFS="\t" '{print $0}' >> $IPA.$IPB.manifest.txt
-Peak_input_normalization_wrapper.pl $IPA.$IPB.manifest.txt $normalizedpeaks
+Peak_input_normalization_wrapper.pl $IPA.$IPB.manifest.txt .
 awk '$4>3 && $5>=1' 001_01.basedon_001_01.peaks.l2inputnormnew.bed > ${IPA}.significant.peaks.bed
 awk '$4>3 && $5>=1' 001_02.basedon_001_02.peaks.l2inputnormnew.bed > ${IPB}.significant.peaks.bed
 mv ${IPA}.significant.peaks.bed $clippeaks/
