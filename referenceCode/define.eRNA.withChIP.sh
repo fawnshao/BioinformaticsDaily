@@ -18,7 +18,7 @@ p300peaks=hg19.MichaelSnyder.p300.rep12opt.ENCFF784YVX.bed
 k27acpeaks=GSM733684_hg19_wgEncodeBroadHistoneHelas3H3k27acStdPk.broadPeak
 pol2peaks=hg19.RichardMyers.pol2.rep12opt.ENCFF417LLT.bed
 
-bedtools intersect -wa -a $p300peaks -b <(awk -vOFS="\t" '{a=$2-400;if(a<0){a=0}print $1,a,$3+400,$4,$5,$6}' $k27acpeaks) | bedtools intersect -v -a - -b <(awk -vOFS="\t" '{a=$2-2000;if(a<0){a=0}print $1,a,$3+2000,$4,$5,$6}' $exonbed) | bedtools intersect -v -a - -b <(awk -vOFS="\t" '{a=$2-3000;if(a<0){a=0}print $1,a,$2,$4,$5,$6"\n"$1,$3,$3+3000,$4,$5,$6}' $genebed) | bedtools intersect -v -a - -b <(awk -vOFS="\t" '{a=$2-1000;if(a<0){a=0}print $1,a,$3+1000,$4,$5,$6}' $lincbed) | bedtools intersect -v -a - -b <(awk -vOFS="\t" '{a=$2-1000;if(a<0){a=0}print $1,a,$3+1000,$4,$5,$6}' $trnabed) > enhancer.p300.peaks
+bedtools intersect -wa -u -a $p300peaks -b <(awk -vOFS="\t" '{a=$2-400;if(a<0){a=0}print $1,a,$3+400,$4,$5,$6}' $k27acpeaks) | bedtools intersect -v -a - -b <(awk -vOFS="\t" '{a=$2-2000;if(a<0){a=0}print $1,a,$3+2000,$4,$5,$6}' $exonbed) | bedtools intersect -v -a - -b <(awk -vOFS="\t" '{a=$2-3000;if(a<0){a=0}print $1,a,$2,$4,$5,$6"\n"$1,$3,$3+3000,$4,$5,$6}' $genebed) | bedtools intersect -v -a - -b <(awk -vOFS="\t" '{a=$2-1000;if(a<0){a=0}print $1,a,$3+1000,$4,$5,$6}' $lincbed) | bedtools intersect -v -a - -b <(awk -vOFS="\t" '{a=$2-1000;if(a<0){a=0}print $1,a,$3+1000,$4,$5,$6}' $trnabed) > enhancer.p300.peaks
 
 bedtools intersect -v -a enhancer.p300.peaks -b $genebed > intergenic.enhancer.p300.peaks
 bedtools intersect -wo -a enhancer.p300.peaks -b $genebed > intragenic.enhancer.p300.peaks

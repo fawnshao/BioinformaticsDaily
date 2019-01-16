@@ -46,7 +46,7 @@ mycompare <- compare_means(results ~ treatments, data = myresults, ref.group = c
                            group.by = "targets", paired = TRUE, method = "t.test")
 mymax <- max(myresults$results, na.rm = T)
 
-p <- ggbarplot(myresults, x = "treatments", y = "results", add = c("dotplot"),
+p <- ggbarplot(myresults, x = "treatments", y = "results", add = c("mean_se", "dotplot"),
           color = "treatments", palette = "jco", facet.by = "targets",
           fill = "treatments", position = position_dodge(0.9),
           add.params = list(fill = "red", size = 0.3)) +
