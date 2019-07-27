@@ -65,16 +65,34 @@ do
 		-n $i.shift.bedpe --keep-dup all --cutoff-analysis 1> $i.shift.bedpe.log 2>&1 &
 	macs2 callpeak --verbose 3 -t $i.rmdup.bam -f BAMPE -g hs \
 		-n $i.bampe --keep-dup all --cutoff-analysis 1> $i.bampe.log 2>&1 &
-
 	
 	makeTagDirectory $i.mTD -fragLength 200 -genome hg19 -checkGC -tbp 1 nochrM.$i.rmdup.bam &
+	# makeTagDirectory $i.mTD -fragLength pe -genome hg19 -checkGC -tbp 1 nochrM.$i.rmdup.bam &
 	bamCoverage -b nochrM.$i.rmdup.bam -o $i.bigWig -of bigwig -bs 1 -p 50 \
-        --normalizeUsing CPM --effectiveGenomeSize 2864785220 --minFragmentLength 150 --maxFragmentLength 1000 &
+        --extendReads --normalizeUsing CPM --effectiveGenomeSize 2864785220 \
+        --minFragmentLength 150 --maxFragmentLength 1000 &
     bamCoverage -b nochrM.$i.rmdup.bam -o nolimit.$i.bigWig -of bigwig -bs 1 -p 50 \
-        	--normalizeUsing CPM --effectiveGenomeSize 2864785220 &
+        --extendReads --normalizeUsing CPM --effectiveGenomeSize 2864785220 &
     bamCoverage -b nochrM.$i.rmdup.bam -o RPGC.$i.bigWig -of bigwig -bs 1 -p 50 \
-        --blackListFileName $blackListFileName \
+        --blackListFileName $blackListFileName --extendReads \
         --normalizeUsing RPGC --effectiveGenomeSize 2864785220 --ignoreForNormalization chr21 &
 done
 wait
 makeMultiWigHub.pl $runname hg19 -url $BwDir -webdir $BwDir -d *.mTD
+
+
+for f in *.bam
+do
+	i=`echo $f | sed 's?.bam??'`
+	samtools sort -n --threads 20 $f -o $i.srtbyn.bam
+	bedtools bamtobed -bedpe -i $i.srtbyn.bam > $i.srtbyn.bedpe
+	# awk -v OFS="\t" '{if($9=="+"){print $1,$2+4,$6+4}if($9=="-"){print $1,$2-5,$6-5}}' \
+	# 	$i.srtbyn.bedpe > $i.srtbyn.shift.bedpe
+	# need to filter the unproper pairs
+	macs2 callpeak --verbose 3 -t $i.srtbyn.bedpe -f BEDPE -g hs \
+		-n $i.bedpe --keep-dup all --cutoff-analysis 1> $i.bedpe.log 2>&1 &
+
+	alignmentSieve --numberOfProcessors 270 --ATACshift --bam $f -o $i.shift.bam
+	macs2 callpeak --verbose 3 -t $i.shift.bam -f BAMPE -g hs \
+		-n $i.shift.bampe --keep-dup all --cutoff-analysis 1> $i.shift.bampe.log 2>&1 &
+done
