@@ -14,3 +14,6 @@ done
 
 grep "Total Sequences" *_1_fastqc/fastqc_data.txt | awk '{print $1"\t"$3}'
 grep -A 2 "Overrepresented sequences" *_1_fastqc/fastqc_data.txt | sed -n '3~4p' | awk '{print $1"\t"$3}'
+
+grep "Total Sequences" *_R1_001_fastqc/fastqc_data.txt | awk '{print $1"\t"$3}'
+grep -A 2 "Overrepresented sequences" *_R1_001_fastqc/fastqc_data.txt | sed -n '3~4p' | awk '{print $1"\t"$3}'
