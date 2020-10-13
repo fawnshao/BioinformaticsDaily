@@ -29,10 +29,25 @@ png(filename ="NUPgenes.mc3.v0.2.8.PUBLIC.maf.oncoplot.png", width = 1200, heigh
 oncoplot(maf = tcga.muts, genes = mygenes$targets)
 dev.off()
 
+png(filename ="NUPgenes.mc3.v0.2.8.PUBLIC.maf.oncoplot.1.png", width = 1600, height = 1000)
+oncoplot(maf = tcga.muts, genes = mygenes$targets)
+dev.off()
 
+png(filename ="NUPgenes.mc3.v0.2.8.PUBLIC.maf.oncoplot.2.png", width = 2000, height = 1500)
+oncoplot(maf = tcga.muts, genes = mygenes$targets)
+dev.off()
+
+svg(filename ="NUPgenes.mc3.v0.2.8.PUBLIC.maf.oncoplot.2.svg", width = 1200, height = 800)
+oncoplot(maf = tcga.muts, genes = mygenes$targets)
+dev.off()
+
+
+pdf(file ="TPR.mc3.v0.2.8.PUBLIC.maf.lollipopPlot.pdf", width = 12, height = 6)
 lollipopPlot(maf = tcga.muts, gene = 'TPR', AACol = 'Amino_Acid_Change', showMutationRate = TRUE)
+dev.off()
+pdf(file ="NUP93.mc3.v0.2.8.PUBLIC.maf.lollipopPlot.pdf", width = 12, height = 6)
 lollipopPlot(maf = tcga.muts, gene = 'NUP93', AACol = 'Amino_Acid_Change', showMutationRate = TRUE, proteinID = "NP_055484")
-
+dev.off()
 #Survival analysis based on grouping of mutation status
 mafSurvival(maf = tcga.muts, genes = 'NUP93', time = 'OS.time', Status = 'OS', isTCGA = FALSE)
 
